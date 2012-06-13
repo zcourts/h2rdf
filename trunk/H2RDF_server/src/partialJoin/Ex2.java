@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 /*
  * (c) Copyright 2005, 2006, 2007 Hewlett-Packard Development Company, LP
  * All rights reserved.

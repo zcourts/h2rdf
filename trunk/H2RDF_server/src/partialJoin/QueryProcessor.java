@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package partialJoin;
 
 
@@ -8,18 +18,32 @@ import org.apache.hadoop.util.hash.JenkinsHash;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.NavigableMap;
 import java.util.StringTokenizer;
 import java.util.Map.Entry;
+import java.util.concurrent.LinkedBlockingDeque;
+
+import javax.activation.UnsupportedDataTypeException;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.MD5Hash;
+
+import byte_import.MyNewTotalOrderPartitioner;
+import bytes.ByteValues;
+import bytes.NotSupportedDatatypeException;
+
+import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.sparql.expr.ExprFunction;
 
 
 public class QueryProcessor {
@@ -29,30 +53,28 @@ public class QueryProcessor {
 	private static Boolean isVariableS;
 	private static Boolean isVariableP;
 	private static Boolean isVariableO;
-	private static HBaseConfiguration hconf=new HBaseConfiguration();
 	private static HTable table;
-	private static Object[] vars;
-	private static int[] varsNo;
-    private static Hash h = JenkinsHash.getInstance();
+	private static final int totsize= ByteValues.totalBytes, rowlength=1+2*totsize;
 	
-	public static int executeSelect(String bgp, FSDataOutputStream out, String bgpNo) {
+	public static void executeSelect(Triple bgp, FSDataOutputStream out, String bgpNo) throws NotSupportedDatatypeException {
 		try {
-			table = new HTable(hconf, "new");
+			table = new HTable(HBaseConfiguration.create(), JoinPlaner.getTable());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		System.out.println(bgp);
 		processBgp(bgp);
-		return executeSpecifSelect(bgp, out, numVars(), bgpNo);	
+		executeSpecifSelect(bgp, out, numVars(), bgpNo);	
 	}
 
-	public static Scan getScan(String bgp) {
-		System.out.println(bgp);
-		processBgp(bgp);
-		return getSpecifScan(bgp, numVars());	
+	public static Scan getScan(Triple q2) throws Exception {
+		System.out.println(q2);
+		processBgp(q2);
+		return getSpecifScan(q2, numVars());	
 	}
-	
-	private static Scan getSpecifScan(String bgp, int numVars) {
+
+
+	private static Scan getSpecifScan(Triple q2, int numVars) throws Exception {
 		Scan scan=null;
 		String t = getTable();
 		byte p=(byte)0;
@@ -64,6 +86,16 @@ public class QueryProcessor {
 			p=(byte)2;
 		byte[] row=null;
 		byte[] col=null;
+		byte[] startfilter=new byte[ByteValues.totalBytes];
+		byte[] stopfilter=new byte[ByteValues.totalBytes];
+		byte[] startfilter0=new byte[ByteValues.totalBytes];
+		byte[] stopfilter0=new byte[ByteValues.totalBytes];
+		for (int i = 0; i < stopfilter.length; i++) {
+			startfilter[i]=(byte) 0;
+			stopfilter[i]=(byte) 255;
+			startfilter0[i]=(byte) 0;
+			stopfilter0[i]=(byte) 255;
+		}
 		if(numVars==0){
 			
 		}
@@ -73,41 +105,91 @@ public class QueryProcessor {
 				System.out.println(JoinPlaner.filters.get(getVariable(t.charAt(2))));
 			}
 			scan = new Scan();
-			row= new byte[1+8+8];
+			row= new byte[1+2*ByteValues.totalBytes];
 			row[0]=p;
 			byte[] bid=getRowIdbyte(t);
-			for (int i = 0; i < 8; i++) {
+			for (int i = 0; i < ByteValues.totalBytes; i++) {
 				row[i+1]=bid[i];
 			}
 			bid=getColId(t);
 			//bid=Bytes.toBytes(colidt);
 			//System.out.println(colidt+"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
-			for (int i = 0; i < 8; i++) {
-				row[i+9]=bid[i];
+			for (int i = 0; i < ByteValues.totalBytes; i++) {
+				row[i+ByteValues.totalBytes+1]=bid[i];
 			}
 			System.out.println(Bytes.toStringBinary(row));
 			scan.setStartRow(row);
 		}
 		else if(numVars==2){
-			scan = new Scan();
-			row= new byte[1+8];
-			row[0]=p;
-			byte[] bid=getRowIdbyte(t);
-			for (int i = 0; i < 8; i++) {
-				row[i+1]=bid[i];
+			if(JoinPlaner.filters.containsKey(getVariable(t.charAt(2))) ){//low performance
+				System.out.println(getVariable(t.charAt(2)));
+				System.out.println(JoinPlaner.filters.get(getVariable(t.charAt(2))));
 			}
-			System.out.println(Bytes.toStringBinary(row));
-			scan.setStartRow(row);
-			byte[] a = Bytes.toBytes(getVariable(t.charAt(1))+"|"+getVariable(t.charAt(2)));
-			col = new byte[a.length];
-			for (int i = 0; i < a.length; i++) {
-				col[i]=a[i];
+			if(JoinPlaner.filters.containsKey(getVariable(t.charAt(1))) ){
+				System.out.println(getVariable(t.charAt(1)));
+				Iterator<ExprFunction> l = JoinPlaner.filters.get(getVariable(t.charAt(1))).iterator();
+				System.out.println(Bytes.toStringBinary(startfilter));
+				System.out.println(Bytes.toStringBinary(stopfilter));
+				while(l.hasNext()){
+					ExprFunction filter = l.next();
+					if(filter.getVarsMentioned().size()==1){
+						ProcessFilters.process(startfilter, stopfilter, filter);
+						System.out.println(Bytes.toStringBinary(startfilter));
+						System.out.println(Bytes.toStringBinary(stopfilter));
+					}
+					else{
+						
+						throw new Exception("usupported filter type"+filter.toString());
+					}
+				}
+				//System.out.println(JoinPlaner.filters.get(getVariable(t.charAt(1))));
 			}
-			System.out.println(Bytes.toStringBinary(col));
-			scan.addColumn(col);
-			/*scan.setStartRow(Bytes.toBytes(t.charAt(0)+"_"+getRowId(t)+"_"));
-			scan.setStopRow(Bytes.toBytes(t.charAt(0)+"_"+getRowId(t)+"_a"));
-			scan.addColumn(Bytes.toBytes("A"));*/
+			if(Bytes.equals(startfilter, startfilter0) && Bytes.equals(stopfilter, stopfilter0)){
+				scan = new Scan();
+				row= new byte[1+ByteValues.totalBytes];
+				row[0]=p;
+				byte[] bid=getRowIdbyte(t);
+				for (int i = 0; i < ByteValues.totalBytes; i++) {
+					row[i+1]=bid[i];
+				}
+				System.out.println(Bytes.toStringBinary(row));
+				scan.setStartRow(row);
+				scan.setStopRow(row);
+				byte[] a = Bytes.toBytes(getVariable(t.charAt(1))+"|"+getVariable(t.charAt(2)));
+				col = new byte[a.length];
+				for (int i = 0; i < a.length; i++) {
+					col[i]=a[i];
+				}
+				System.out.println(Bytes.toStringBinary(col));
+				scan.addFamily(col);
+			}
+			else{
+				scan = new Scan();
+				byte[] start= new byte[1+2*ByteValues.totalBytes];
+				byte[] stop= new byte[1+2*ByteValues.totalBytes];
+				start[0]=p;
+				stop[0]=p;
+				byte[] bid=getRowIdbyte(t);
+				for (int i = 0; i < ByteValues.totalBytes; i++) {
+					start[i+1]=bid[i];
+					stop[i+1]=bid[i];
+				}
+				for (int i = 0; i < ByteValues.totalBytes; i++) {
+					start[i+ByteValues.totalBytes+1]=startfilter[i];
+					stop[i+ByteValues.totalBytes+1]=stopfilter[i];
+				}
+				System.out.println(Bytes.toStringBinary(row));
+				scan.setStartRow(start);
+				scan.setStopRow(stop);
+				
+				byte[] a = Bytes.toBytes(getVariable(t.charAt(1))+"|"+getVariable(t.charAt(2)));
+				col = new byte[a.length];
+				for (int i = 0; i < a.length; i++) {
+					col[i]=a[i];
+				}
+				System.out.println(Bytes.toStringBinary(col));
+				scan.addFamily(col);
+			}
 		}
 		else if(numVars==3){
 			
@@ -115,75 +197,35 @@ public class QueryProcessor {
 		return scan; 
 	}
 
-	private static byte[] getColIdbyte(String table) {
-		String string =null;
-		if(table.charAt(1)=='s' ){
-			string="<"+s+">";
-		}
-		else if(table.charAt(1)=='p' ){
-			string="<"+p+">";
-		}
-		else if(table.charAt(1)=='o' ){
-			if(o.contains("\"")){
-				StringTokenizer tok = new StringTokenizer(o);
-				String o1= tok.nextToken("^^")+"^^<"+tok.nextToken();
-				o1=o1+">";
-				o=o1;
-				//o=o.replace('"', '<');
-			}
-			else
-				o="<"+o+">";
-			string=o;
-			System.out.println(o);
-		}
 
-		byte[] bst=Bytes.toBytes(string);
-		Integer hashVal = Math.abs(h.hash(bst, bst.length, 0));
-		byte[] ret = Bytes.toBytes(hashVal);
-		//String ret = MD5Hash.digest(string).toString();
-		if (ret.length==4)
-			return ret;
-		else 
-			return null;
-	}
-
-	private static byte[] getRowIdbyte(String table) {
-		String string =null;
+	private static byte[] getRowIdbyte(String table) throws Exception {
+		String string ="";
 		if(table.startsWith("s")){
-			System.out.println(s+"ssssssssssssssssssssss");
 			string="<"+s+">";
 		}
 		else if(table.startsWith("p")){
-			System.out.println(p+"pppppppppppppppppppppp");
-			if(p.equals("rdf:type")){
-				string="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-				
-			}
-			else{
-				string="<"+p+">";
-			}
+			string="<"+p+">";
 		}
 		else if(table.startsWith("o")){
-			System.out.println(o+"ooooooooooooooooooooooo");
-			string="<"+o+">";
+			if(!o.contains("^^"))
+				string="<"+o+">";
+			else{
+				StringTokenizer tok =new StringTokenizer(o);
+				String v=tok.nextToken("^^");
+				string +="\""+v+"\"^^<"+tok.nextToken("^^")+">";
+			}
 		}
+		System.out.println(string);
 		
-		MD5Hash md5h = MD5Hash.digest(string);
-		long hashVal = Math.abs(md5h.halfDigest());
-		
-		//Jenkins hash
-		// byte[] bst=Bytes.toBytes(string);
-		//Integer hashVal = Math.abs(h.hash(bst, bst.length, 0));
-		
-		byte[] ret = Bytes.toBytes(hashVal);
-		if (ret.length==8)
+		byte[] ret = ByteValues.getFullValue(string);
+		if (ret.length==ByteValues.totalBytes)
 			return ret;
 		else 
-			return null;
+			throw new Exception("wrong id length");
 		
 	}
 
-	public static String getInpVars(String bgp) {
+	public static String getInpVars() {
 		int numVars =numVars();
 		String ret ="";
 		if(numVars==0){
@@ -218,76 +260,111 @@ public class QueryProcessor {
 		return ret;
 	}
 
-	private static int executeSpecifSelect( String bgp, FSDataOutputStream out, int numVars, String bgpNo) {
-		int ret=0;
-		if(numVars==0){
-			
-		}
-		else if(numVars==1){
-			try {
-				String t = getTable();
-				
-				Scan scan = new Scan();
-				scan.setStartRow(Bytes.toBytes(t.charAt(0)+"_"+getRowId(t)+"_"));
-				scan.setStopRow(Bytes.toBytes(t.charAt(0)+"_"+getRowId(t)+"_a"));
-				scan.addColumn(Bytes.toBytes("A:"+getColId(t)));
-				Iterator<Result> sc = table.getScanner(scan).iterator();
-				while(sc.hasNext()){
-					Result result = sc.next();
-			        ret = result.size();
-			        out.writeBytes(bgpNo+" ");
-	            	String var1=getVariable(t.charAt(2));
-	            	out.writeBytes(String.format("%s$$%s ", var1, Bytes.toString(result.raw()[0].getValue())));
-	            	out.writeBytes("\n");
-				}
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+	private static void executeSpecifSelect( Triple bgp, FSDataOutputStream out, int numVars, String pat) throws NotSupportedDatatypeException {
+		
+		byte[] rowid =JoinPlaner.getScan(0).getStartRow();
+		byte[] startr = new byte[rowlength+2];
+		byte[] stopr = new byte[rowlength+2];
+		if(numVars==1){
+			startr[0] =rowid[0];
+			stopr[0] =rowid[0];
+			for (int i = 1; i < rowid.length; i++) {
+				startr[i] =rowid[i];
+				stopr[i] =rowid[i];
+			}
+			if (rowid.length==rowlength) {
+				startr[startr.length-2] =(byte)0;
+				startr[startr.length-1] =(byte)0;
+				stopr[stopr.length-2] =(byte)MyNewTotalOrderPartitioner.MAX_HBASE_BUCKETS;
+				stopr[stopr.length-1] =(byte)MyNewTotalOrderPartitioner.MAX_HBASE_BUCKETS;
 			}
 		}
 		else if(numVars==2){
-			try {
-				String t = getTable();
-				//System.out.println(getRowId(t)+"ooooooooooooooooooooooo");
-				
-				Scan scan = new Scan();
-				scan.setStartRow(Bytes.toBytes(t.charAt(0)+"_"+getRowId(t)+"_"));
-				scan.setStopRow(Bytes.toBytes(t.charAt(0)+"_"+getRowId(t)+"_a"));
-				scan.addColumn(Bytes.toBytes("A"));
-				Iterator<Result> sc = table.getScanner(scan).iterator();
-				while(sc.hasNext()){
-					Result result = sc.next();
-			        ret = result.size();
-			        NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> map = result.getMap();
-					for( Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> columnFamilyEntry : map.entrySet()){
-						NavigableMap<byte[], NavigableMap<Long, byte[]>> columnMap = columnFamilyEntry.getValue();
-			            for( Entry<byte[], NavigableMap<Long, byte[]>> columnEntry : columnMap.entrySet()){
-			            	NavigableMap<Long, byte[]> cellMap = columnEntry.getValue();
-			                for ( Entry<Long, byte[]> cellEntry : cellMap.entrySet()){
-			                	out.writeBytes(bgpNo+" ");
-			                	String var1=getVariable(t.charAt(1));
-			                	String var2=getVariable(t.charAt(2));
-			                	out.writeBytes(String.format("%s$$%s ",var1, Bytes.toString(columnEntry.getKey())));
-			                	out.writeBytes(String.format("%s$$%s ", var2, Bytes.toString(cellEntry.getValue())));
-			                	out.writeBytes("\n");
-			                }
-
-			            }
-			        }
+			if (rowid.length==totsize+1) {
+				startr[0] =rowid[0];
+				stopr[0] =rowid[0];
+				for (int i = 1; i < rowid.length; i++) {
+					startr[i] =rowid[i];
+					stopr[i] =rowid[i];
 				}
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				  for (int i = totsize+1; i < startr.length-2; i++) {
+					  startr[i] =(byte)0;
+					  stopr[i] =(byte)255;
+				  }
+				  startr[startr.length-2] =(byte)0;
+				  startr[startr.length-1] =(byte)0;
+				  stopr[stopr.length-2] =(byte)MyNewTotalOrderPartitioner.MAX_HBASE_BUCKETS;
+				  stopr[stopr.length-1] =(byte)MyNewTotalOrderPartitioner.MAX_HBASE_BUCKETS;
+			}
+			else{
+				byte[] stop = JoinPlaner.getScan(0).getStopRow();
+				startr[0] =rowid[0];
+				stopr[0] =stop[0];
+				for (int i = 1; i < 1+2*totsize; i++) {
+					startr[i] =rowid[i];
+					stopr[i] =stop[i];
+				}
+				startr[startr.length-2] =(byte)0;
+				startr[startr.length-1] =(byte)0;
+				stopr[stopr.length-2] =(byte)MyNewTotalOrderPartitioner.MAX_HBASE_BUCKETS;
+				stopr[stopr.length-1] =(byte)MyNewTotalOrderPartitioner.MAX_HBASE_BUCKETS;
 			}
 		}
-		else if(numVars==3){
-			
+		byte[] bid,a;
+		a=Bytes.toBytes("A");
+		bid = new byte[a.length];
+		for (int i = 0; i < a.length; i++) {
+			bid[i]=a[i];
 		}
+		System.out.println("startr"+Bytes.toStringBinary(startr));
+		System.out.println("stopr"+Bytes.toStringBinary(stopr));
+		Scan scan =new Scan();
+		scan.setStartRow(startr);
+		scan.setStopRow(stopr);
+		scan.setCaching(70000);
+		scan.setCacheBlocks(true);
 		
-		//return ret; gia arithmo grammwn
-		return out.size(); //gia bytes
+		//must be changed
+		//scan.addFamily(bid);
+		ResultScanner resultScanner=null;
+		try {
+			resultScanner = table.getScanner(scan);
+			Result result = null;
+			while((result=resultScanner.next())!=null){
+				//System.out.println("size: "+result.size());
+				Iterator<KeyValue> it = result.list().iterator();
+				while(it.hasNext()){
+					KeyValue kv = it.next();
+					if(kv.getQualifier().length==totsize){
+						if(numVars==1){
+							  StringTokenizer vtok2 = new StringTokenizer(getInpVars());
+							  String v1=vtok2.nextToken();
+							  out.writeUTF(pat+"!"+v1+"#"+ByteValues.getStringValue(kv.getQualifier())+"_\n");
+						}
+						else if(numVars==2){
+							  StringTokenizer vtok2 = new StringTokenizer(getInpVars());
+							  String v1=vtok2.nextToken();
+							  String v2=vtok2.nextToken();
+							  byte[] r = kv.getRow();
+							  byte[] r1= new byte[totsize];
+							  for (int j = 0; j < r1.length; j++) {
+								  r1[j]=r[totsize+1+j];
+							  }
+							  out.writeUTF(pat+"!"+v1+"#"+ByteValues.getStringValue(r1)+"_!"+ 
+								v2+"#"+ByteValues.getStringValue(kv.getQualifier())+"_!\n");
+						}
+					}
+					
+				}
+				
+			}
+			out.flush();
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally {
+			resultScanner.close();  // always close the ResultScanner!
+		}
 	}
 
 	private static int getPosition(String s, Object[] st) {
@@ -312,87 +389,31 @@ public class QueryProcessor {
 			return null;
 	}
 
-	private static String getRowId(String table) {
-		String string =null;
-		if(table.startsWith("s")){
-			System.out.println(s+"ssssssssssssssssssssss");
-			string="<"+s+">";
-		}
-		else if(table.startsWith("p")){
-			System.out.println(p+"pppppppppppppppppppppp");
-			if(p.equals("rdf:type")){
-				string="<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-				
-			}
-			else if(p.equals("rdfs:subClassOf")){
-				string="<http://www.w3.org/2000/01/rdf-schema#subClassOf>";
-				
-			}
-			else{
-				string="<"+p+">";
-			}
-		}
-		else if(table.startsWith("o")){
-			System.out.println(o+"ooooooooooooooooooooooo");
-			string="<"+o+">";
-		}
-
-		byte[] bst=Bytes.toBytes(string);
-		Integer hashVal = Math.abs(h.hash(bst, bst.length, 0));
-		String ret = hashVal.toString();
-		//String ret = MD5Hash.digest(string).toString();
-		
-		String si1 =null;
-		if(ret.startsWith("-")){
-			ret = ret.substring(1);
-			si1 ="-";
-			for (int j = 0; j < 10-ret.length(); j++) {
-				si1+="0";
-			}
-		}
-		else{
-			si1 ="";
-			for (int j = 0; j < 10-ret.length(); j++) {
-				si1+="0";
-			}
-		}
-		ret = si1+ret;
-		return ret;
-	}
 	
-	private static byte[] getColId(String table) {
-		String string =null;
-		if(table.charAt(1)=='s' ){
+	private static byte[] getColId(String table) throws Exception {
+		String string ="";
+		if(table.charAt(1)=='s'){
 			string="<"+s+">";
 		}
-		else if(table.charAt(1)=='p' ){
+		else if(table.charAt(1)=='p'){
 			string="<"+p+">";
 		}
-		else if(table.charAt(1)=='o' ){
-			if(o.contains("\"")){
-				/*StringTokenizer tok = new StringTokenizer(o);
-				String o1= tok.nextToken("^^")+"^^<"+tok.nextToken();
-				o1=o1+">";
-				o=o1;*/
-				//o=o.replace('"', '<');
+		else if(table.charAt(1)=='o'){
+			if(!o.contains("^^"))
+				string="<"+o+">";
+			else{
+				StringTokenizer tok =new StringTokenizer(o);
+				String v=tok.nextToken("^^");
+				string +="\""+v+"\"^^<"+tok.nextToken("^^")+">";
 			}
-			else
-				o="<"+o+">";
-			string=o;
-			System.out.println(o);
 		}
+		System.out.println(string);
 		
-		//byte[] bst=Bytes.toBytes(string);
-		//Integer hashVal = Math.abs(h.hash(bst, bst.length, 0));
-
-		MD5Hash md5h = MD5Hash.digest(string);
-		long hashVal = Math.abs(md5h.halfDigest());
-		byte[] ret = Bytes.toBytes(hashVal);
-		if (ret.length==8)
+		byte[] ret = ByteValues.getFullValue(string);
+		if (ret.length==ByteValues.totalBytes)
 			return ret;
 		else 
-			return null;
-		
+			throw new Exception("wrong id length");
 	}
 	
 	private static String getTable() {
@@ -414,42 +435,35 @@ public class QueryProcessor {
 			return "spo";
 	}
 	
-	private static void processBgp(String bgp) {
-		StringTokenizer tokenizer = new StringTokenizer(bgp);
-		s=tokenizer.nextToken();
-		if(s.startsWith("?")){
+	private static void processBgp(Triple t) {
+		s=t.getSubject().toString(false);
+		if(t.getSubject().isVariable()){
 			isVariableS = true;
 		}
 		else{
 			isVariableS = false;
-			//s=s.split(":")[1];
 		}
-		p=tokenizer.nextToken();
-		p=p.split("@")[1];
-		if(p.startsWith("?")){
+		p=t.getPredicate().toString(false);
+		if(t.getPredicate().isVariable()){
 			isVariableP = true;
 		}
 		else{
 			isVariableP = false;
-			//p=p.split(":")[1];
 		}
-		o=tokenizer.nextToken();
-		if(o.startsWith("?")){
+		o=t.getObject().toString(false);
+		if(t.getObject().isVariable()){
 			isVariableO = true;
 		}
 		else{
 			isVariableO = false;
-			//o=o.split(":")[1];
 		}
-			
-		if (tokenizer.hasMoreTokens()){
-			System.out.println("wrong bgp");
-		}
+		System.out.println(s+" "+p+" "+o);
+		System.out.println(isVariableS+" "+isVariableP+" "+isVariableO);
 	}
 
 	
 
-	public static void executeJoin(Path outFile, Object[] join_files) {
+	public static void executeJoin(Path outFile, Object[] join_files, Configuration joinConf) {
 		int m_rc = 0;
 		String[] args=new String[join_files.length+1];
     	args[0]=outFile.getName();
@@ -457,39 +471,12 @@ public class QueryProcessor {
 			args[i+1]=join_files[i].toString().split(":")[0];
 		}
         try {
-			m_rc = ToolRunner.run(new Configuration(),new HbaseJoinBGP(), args);
+			m_rc = ToolRunner.run(joinConf ,new HbaseJoinBGP(), args);
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.exit(5);
 		}
 		
 	}
-
-	public static void setVars(String bgp) {
-		processBgp(bgp);
-		for (int i = 0; i < vars.length; i++) {
-			if(s.equals(vars[i].toString()))
-				varsNo[i]++;
-			if(p.equals(vars[i].toString()))
-				varsNo[i]++;
-			if(o.equals(vars[i].toString()))
-				varsNo[i]++;
-				
-		}
-	}
-
-	public static void newVaRS(Object[] v) {
-		vars = v;
-		varsNo = new int[vars.length];
-		for (int i = 0; i < vars.length; i++) {
-			varsNo[i]=0;
-		}
-	}
-
-	public static void printVars() {
-		for (int i = 0; i < vars.length; i++) {
-			System.out.println(varsNo[i]);
-		}
-	}
-
 
 }

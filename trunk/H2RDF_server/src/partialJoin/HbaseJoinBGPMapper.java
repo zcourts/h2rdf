@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package partialJoin;
 
 import java.io.IOException;
@@ -80,12 +90,10 @@ public class HbaseJoinBGPMapper extends Mapper<ImmutableBytesWritable, Text, Tex
 		super.setup(context);
 		
 		Configuration conf = context.getConfiguration();
-    	FileSystem fs = FileSystem.get(conf);
-    	FSDataInputStream v = fs.open(new Path(conf.get("nikos.inputfile")));
-    	jo=v.readLine();
-    	newjoinVars=v.readLine();
-    	v.close();
+    	jo=conf.get("input.joinvars");
+    	newjoinVars=conf.get("input.patId");
 	}
+	
 	private String breakList(String newline, String binding, String pred) {
 
 		StringTokenizer tokenizer = new StringTokenizer(binding);

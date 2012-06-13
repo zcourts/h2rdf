@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package partialJoin;
 
 import input_format.FileTableInputFormat;
@@ -10,6 +20,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapreduce.Job;
@@ -22,8 +33,9 @@ import byte_import.MyNewTotalOrderPartitioner;
 public class HbaseJoinBGP implements Tool{
 
 	private Configuration conf;
+	
     public int run(String[] args) throws Exception {
-		Job job = new Job(getConf(), "Join");
+		Job job = new Job(JoinPlaner.joinConf, "Join");
 		job.setJarByClass(HbaseJoinBGP.class);
 		job.setMapperClass(HbaseJoinBGPMapper.class);
 		job.setReducerClass(HbaseJoinBGPReducer.class);
@@ -62,7 +74,10 @@ public class HbaseJoinBGP implements Tool{
 		    if(p[i].contains("BGP")){
 		    	int no=Integer.parseInt(p[i].substring(p[i].length()-1));
 			    Scan scan =JoinPlaner.getScan(no);
-			    String col=scan.getInputColumns();
+			    String col ="";
+			    if(scan.hasFamilies()){
+			    	col=Bytes.toString(scan.getFamilies()[0]);
+			    }
 			    byte[] startRow =scan.getStartRow();
 			    byte[] stopRow =scan.getStopRow();
 			    if(col.contains("?")){
@@ -87,9 +102,9 @@ public class HbaseJoinBGP implements Tool{
 				"mapred.reduce.tasks.speculative.execution", false);
 		job.getConfiguration().setInt("io.sort.mb", 100);
 		job.getConfiguration().setInt("io.file.buffer.size", 131072);
-		/*job.getConfiguration().setInt("mapred.job.reuse.jvm.num.tasks", -1);
+		job.getConfiguration().setInt("mapred.job.reuse.jvm.num.tasks", -1);
 		
-		job.getConfiguration().setInt("io.sort.mb", 100);*/
+		//job.getConfiguration().setInt("io.sort.mb", 100);
 		if(file==0)
 			job.setInputFormatClass(TableInputFormat.class);
 		else

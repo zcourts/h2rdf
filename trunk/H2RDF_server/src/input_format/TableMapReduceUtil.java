@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package input_format;
 
 
@@ -242,8 +252,8 @@ public static void addCol(String vars, String fname, String table, byte[] startr
 	Scan newScan = new Scan();
 	newScan.setStartRow(startrow);
 	newScan.setStopRow(stoprow);
-	newScan.addColumn(Bytes.toBytes(col));
-	System.out.println(newScan.getInputColumns());
+	newScan.addFamily(Bytes.toBytes(col));
+	//System.out.println(Bytes.toString(newScan.getFamilies()[0]));
     try {
 	    job.getConfiguration().set(FileTableInputFormat.INPUT_TABLE+no, table);
 	    job.getConfiguration().set(FileTableInputFormat.VARS+no, vars);

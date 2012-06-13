@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 /**
  * Copyright 2007 The Apache Software Foundation
  *
@@ -105,7 +115,13 @@ implements Configurable {
 		  		trr = new MyLineRecordReader();
 		  	}
 		  	else if(s.type==1){
-		  		trr = new HFileRecordReaderBufferedScan();
+		  		TableColumnSplit ts = (TableColumnSplit)s;
+		  		if(ts.getRegionBitmap().cardinality()>0){
+			  		trr = new HFileRecordReaderBitmapCrossRegion();
+		  		}
+		  		else{
+			  		trr = new HFileRecordReaderBufferedNoScan();
+		  		}
 		  	}
 	      	return trr;
 	  }
@@ -115,10 +131,12 @@ implements Configurable {
 	  List<InputSplit> splits = super.getSplits(context);
 	  List<InputSplit>  spl = textFormat.getSplits(context);
 	  splits.addAll(spl);
-	  if(splits.size()<=HexastoreBulkImport.MAX_TASKS)
+	  String p=context.getConfiguration().get("mapred.fairscheduler.pool");
+	  int max = Integer.parseInt(p.substring(p.indexOf("l")+1));
+	  if(splits.size()<=max)
 		  context.getConfiguration().setInt("mapred.reduce.tasks", splits.size());
 	  else
-		  context.getConfiguration().setInt("mapred.reduce.tasks", HexastoreBulkImport.MAX_TASKS);
+		  context.getConfiguration().setInt("mapred.reduce.tasks", max);
 	  return splits;
 	  
   }

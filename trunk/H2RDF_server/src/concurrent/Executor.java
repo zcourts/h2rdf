@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package concurrent;
 
 /**
@@ -36,6 +46,7 @@ public class Executor
     static Integer mutex;
     public long startTimeReal;
     public static long startTime;
+	private static String separator = "$query$" ;
     
     public Executor(String address, String root, 
             String query) throws KeeperException, IOException {
@@ -71,14 +82,15 @@ public class Executor
         String NL = System.getProperty("line.separator") ; 
         String address = args[0];
         String root = args[1];
-        String query = args[2];
+        String table = args[2];
+        String query = args[3];
         String prolog = "PREFIX dc: <http://dbpedia.org/resource/>"+
 		"PREFIX p: <http://dbpedia.org/ontology/>"+
 		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"+
 		"PREFIX ub: <http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#>"+
 		"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>";
 
-		String q = "new2"+ NL+prolog + NL + query;
+		String q = table+ separator +prolog + NL + query;
 		
         try {
             new Executor(address, root, q).run();

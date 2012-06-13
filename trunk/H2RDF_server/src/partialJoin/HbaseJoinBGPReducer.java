@@ -1,7 +1,19 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package partialJoin;
 
 import java.io.IOException;
 import java.util.*;
+
+import javaewah.EWAHCompressedBitmap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -19,12 +31,16 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import translator.CastLongToInt;
+
 import byte_import.MyNewTotalOrderPartitioner;
+import bytes.ByteValues;
+import bytes.NotSupportedDatatypeException;
 
 public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 	private Text outKey = new Text();
 	private Text outValue = new Text("");
-	private static HBaseConfiguration hconf=new HBaseConfiguration();
+	private static Configuration hconf= HBaseConfiguration.create();
 	private static HTable table;
 	private String joinVars;
 	private String joinNo;
@@ -36,8 +52,9 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 	private int j, nonJoinSize;
 	private int isLast;
 	private Configuration conf;
-	private static byte[] SUBCLASS = Bytes.toBytes( new Long("8742859611446415633"));
-	private HashSet<Integer> trans_hash=null;
+	private static byte[] SUBCLASS ;
+	private SortedSet<Integer> trans_hash=null;
+	private static final int totsize= ByteValues.totalBytes, rowlength=1+2*totsize;
 	  
 
 	public void reduce(Text key, Iterable<Text> values, Context context) throws IOException {
@@ -60,41 +77,45 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 		
 		StringTokenizer valueTokenizer;
 		String sum = "J"+j+":"+fileno+"!", temp, tok;
-		String s1="";
 		Set p = new HashSet();
-		int i=0;
-		if(j==1){
-			ValueDoubleMerger.init();
-		}
-		else{
-			ValueMerger.init();
-		}
+
+		//System.out.println("key: "+ key.toString());
+		ValueDoubleMerger merger = new ValueDoubleMerger(conf);
+		
 		for(Text value: values) {
 			tok=value.toString();
 			valueTokenizer = new StringTokenizer(tok);
 			temp=valueTokenizer.nextToken("$");
-			if(!p.contains(temp)){
-				i++;
-				p.add(temp);
-			}
+			//System.out.println("pat: "+temp + "key: "+ key.toString());
 			if(valueTokenizer.hasMoreTokens()){
-				if(j==1){
-					ValueDoubleMerger.merge(tok.substring(temp.length()+1), temp);
-				}
-				else{
-					s1+=tok.substring(temp.length()+1);
-					//ValueMerger.merge(tok.substring(temp.length()+1), temp);
-				}
+				merger.merge(tok.substring(temp.length()+1), temp);
+			}
+			else{
+				merger.merge("", temp);
 			}
 		}
-		/*if(j!=1){
-			s1=ValueMerger.getValue();
-		}*/
+
+		int bind_no=merger.getTotalPatterns();
+		//System.out.println("bind_no:"+bind_no);
+		//System.out.println("jno:"+jno);
 		if(nonJoinSize==0){//Full input
-			if(i==jno){
-
-
-				if(j==1){
+			if(bind_no==jno){
+				if(merger.itter()){
+					while(merger.hasMore()){
+						String s1=merger.getValue();
+						if(!s1.equals("")){
+							outKey.set(sum+key+"!"+merger.getTotal()+"!"+s1);
+							writeOut(outKey, outValue, context);
+						}
+					}
+				}
+				else{
+					outKey.set(sum+key+"!"+merger.getTotal()+"!");
+					writeOut(outKey, outValue, context);
+				}
+				
+				
+				/*if(j==1){
 					ValueDoubleMerger.itter();
 					while(ValueDoubleMerger.hasMore()){
 						s1=ValueDoubleMerger.getValue();
@@ -103,11 +124,13 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 							writeOut(outKey, outValue, context);
 						}
 					}
+					//outKey.set(sum+key+"!"+s1);
+					//writeOut(outKey, outValue, context);
 				}	
 				else{
 					outKey.set(sum+key+"!"+s1);
 					writeOut(outKey, outValue, context);
-				}
+				}*/
 				/*Set ret = doubleVar(s1);
 				if(ret.isEmpty()){
 					s1=removeId(s1);
@@ -124,7 +147,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 		
 		int nonjno=nonJoinSizeTab[vid];
 		String foundkvals1 =null;
-		if(i==jno-nonjno){//exei perasei to map phase join
+		if(bind_no==jno-nonjno){//exei perasei to map phase join
 			
 			StringTokenizer vt = new StringTokenizer(key.toString());
 			String patvals= vt.nextToken("#");
@@ -136,7 +159,12 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 			StringTokenizer tokenizer1 = new StringTokenizer(keyvals);
 			while(tokenizer1.hasMoreTokens()) {//itterate sta binding tou kleidiou isws den xreiazetai
 				String temp2 = tokenizer1.nextToken("_");
-				byte[] temp1=Bytes.toBytes(Long.parseLong(temp2));
+				byte[] temp3=Bytes.toBytes(Long.parseLong(temp2.substring(temp2.indexOf("|")+1)));
+				byte[] temp1=new byte[totsize];
+				temp1[0]=(byte) new Byte(temp2.substring(0,temp2.indexOf("|")));
+				for (int j = 0; j < 8; j++) {
+					temp1[j+1]=temp3[j];
+				}
 				int found=0;
 				String outkeytemp="";
 				for (int jj = 0; jj < nonjno; jj++) {//itterate gia subclasses
@@ -146,8 +174,8 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 						StringTokenizer tt1 = new StringTokenizer(nonJoinCol[vid][jj]);
 						String varname1 = tt1.nextToken("|");
 						String varname2 = tt1.nextToken("|");
-						byte[] b = new byte[8];
-						for (int j = 0; j < 8; j++) {
+						byte[] b = new byte[totsize];
+						for (int j = 0; j < totsize; j++) {
 							b[j]=nonJoinStartRow[vid][jj][j+1];
 						}
 						if(nonJoinStartRow[vid][jj][0]==(byte)2){//osp
@@ -155,6 +183,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 								//osp
 								byte pinakas = (byte)2;
 								String outkeytemp1=reduceJoin(pinakas, b, temp1, varname2);
+								merger.merge(outkeytemp1, "K"+jj);
 								if(!outkeytemp1.equals("")){
 									found++;
 									outkeytemp+=outkeytemp1;
@@ -164,6 +193,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 								//pos
 								byte pinakas = (byte)3;
 								String outkeytemp1=reduceJoin(pinakas,temp1, b,  varname1);
+								merger.merge(outkeytemp1, "K"+jj);
 								if(!outkeytemp1.equals("")){
 									found++;
 									outkeytemp+=outkeytemp1;
@@ -176,6 +206,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 								//pos
 								byte pinakas = (byte)3;
 								String outkeytemp1=reduceJoin(pinakas, b, temp1, varname2);
+								merger.merge(outkeytemp1, "K"+jj);
 								if(!outkeytemp1.equals("")){
 									found++;
 									outkeytemp+=outkeytemp1;
@@ -185,6 +216,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 								//spo
 								byte pinakas = (byte)4;
 								String outkeytemp1=reduceJoin(pinakas, temp1, b, varname1);
+								merger.merge(outkeytemp1, "K"+jj);
 								if(!outkeytemp1.equals("")){
 									found++;
 									outkeytemp+=outkeytemp1;
@@ -195,6 +227,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 							if(patvals.equals(varname1)){//spo
 								byte pinakas = (byte)4;
 								String outkeytemp1=reduceJoin(pinakas, b, temp1, varname2);
+								merger.merge(outkeytemp1, "K"+jj);
 								if(!outkeytemp1.equals("")){
 									found++;
 									outkeytemp+=outkeytemp1;
@@ -204,6 +237,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 								//osp
 								byte pinakas = (byte)2;
 								String outkeytemp1=reduceJoin(pinakas, temp1, b, varname1);
+								merger.merge(outkeytemp1, "K"+jj);
 								if(!outkeytemp1.equals("")){
 									found++;
 									outkeytemp+=outkeytemp1;
@@ -215,34 +249,34 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 						
 						if(nonJoinStartRow[vid][jj][0]==(byte)2){//osp
 							byte pinakas = (byte)2;
-							byte[] b1 = new byte[8];
-							for (int j = 0; j < 8; j++) {
-								b1[i]=nonJoinStartRow[vid][jj][i+1];
+							byte[] b1 = new byte[totsize];
+							for (int j = 0; j < totsize; j++) {
+								b1[j]=nonJoinStartRow[vid][jj][j+1];
 							}
-							byte[] b2 = new byte[8];
-							for (int j = 0; j < 8; j++) {
-								b2[i]=nonJoinStartRow[vid][jj][i+9];
+							byte[] b2 = new byte[totsize];
+							for (int j = 0; j < totsize; j++) {
+								b2[j]=nonJoinStartRow[vid][jj][j+1+totsize];
 							}
 							found+=reduceJoinAllVar(pinakas, b1, b2, temp1);
 						}
 						else if(nonJoinStartRow[vid][jj][0]==(byte)3){//pos
-							byte[] b1 = new byte[8];
-							byte[] b2 = new byte[8];
-							byte[] b3 = new byte[8];
+							byte[] b1 = new byte[totsize];
+							byte[] b2 = new byte[totsize];
+							byte[] b3 = new byte[totsize];
 							int size =nonJoinStartRow[vid][jj].length;
 							byte pinakas=(byte)2;//osp
-							for (int j = 0; j < 8; j++) {
+							for (int j = 0; j < totsize; j++) {
 								b2[j]= temp1[j];
 							}
-							for (int i1 = 0; i1 < 8; i1++) {
+							for (int i1 = 0; i1 < totsize; i1++) {
 								b3[i1]=nonJoinStartRow[vid][jj][i1+1];
 							}
 							//find subclasses
-							if(size>17){//uparxoun subclasses
+							if(size>rowlength){//uparxoun subclasses
 								int ffound = 0 ;
-								for (int ik = 0; ik < (size-9)/8; ik++) {
-									for (int j = 0; j < 8; j++) {
-										b1[j]= nonJoinStartRow[vid][jj][j+9+ik*8];
+								for (int ik = 0; ik < (size-1-totsize)/totsize; ik++) {
+									for (int j = 0; j < totsize; j++) {
+										b1[j]= nonJoinStartRow[vid][jj][j+1+totsize+ik*totsize];
 									}
 									//System.out.println(Bytes.toStringBinary(b1));
 									ffound+=reduceJoinAllVar(pinakas, b1, b2, b3);
@@ -253,23 +287,23 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 								}
 							}
 							else{//no subclasses
-								for (int j = 0; j < 8; j++) {
-									b1[j]= nonJoinStartRow[vid][jj][9+j];
+								for (int j = 0; j < totsize; j++) {
+									b1[j]= nonJoinStartRow[vid][jj][1+totsize+j];
 								}
-								//System.out.println(Bytes.toStringBinary(b1));
+							//System.out.println(Bytes.toStringBinary(b1));
 								found+=reduceJoinAllVar(pinakas, b1, b2, b3);
 							}
 							
 						}
 						else if(nonJoinStartRow[vid][jj][0]==(byte)4){//spo
 							byte pinakas = (byte)2;
-							byte[] b1 = new byte[8];
-							for (int j = 0; j < 8; j++) {
-								b1[i]=nonJoinStartRow[vid][jj][i+1];
+							byte[] b1 = new byte[totsize];
+							for (int j = 0; j < totsize; j++) {
+								b1[j]=nonJoinStartRow[vid][jj][j+1];
 							}
-							byte[] b2 = new byte[8];
-							for (int j = 0; j < 8; j++) {
-								b2[i]=nonJoinStartRow[vid][jj][i+9];
+							byte[] b2 = new byte[totsize];
+							for (int j = 0; j < totsize; j++) {
+								b2[j]=nonJoinStartRow[vid][jj][j+1+totsize];
 							}
 							found+=reduceJoinAllVar(pinakas, temp1, b1, b2);
 						}
@@ -282,7 +316,21 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 					if(findDoub){
 						String fkvals= temp2+"_";
 						//foundkvals+=valueToString(temp1,4);
-						outKey.set(sum+foundkvals1+fkvals+"!"+outkeytemp+s1);
+
+						if(merger.itter()){
+							while(merger.hasMore()){
+								String s1=merger.getValue();
+								if(!s1.equals("")){
+									outKey.set(sum+foundkvals1+fkvals+"!"+merger.getTotal()+"!"+s1);
+									writeOut(outKey, outValue, context);
+								}
+							}
+						}
+						else{
+							outKey.set(sum+sum+foundkvals1+fkvals+"!"+merger.getTotal()+"!");
+							writeOut(outKey, outValue, context);
+						}
+						//outKey.set(sum+foundkvals1+fkvals+"!"+outkeytemp+s1);
 						/*Set ret = doubleVar(s1);
 						if(ret.isEmpty()){
 							s1=removeId(s1);
@@ -292,7 +340,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 							s1 = joinDoubleVars(ret, s1);
 							outKey.set(sum);
 						}*/
-						writeOut(outKey, outValue, context);
+						//writeOut(outKey, outValue, context);
 					}
 					else{
 						foundkb+=temp2+"_";
@@ -304,8 +352,21 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 			}
 			if((foundsize>0)&& (!findDoub)){
 				foundkvals1+= foundkb;
+				if(merger.itter()){
+					while(merger.hasMore()){
+						String s1=merger.getValue();
+						if(!s1.equals("")){
+							outKey.set(sum+foundkvals1+"!"+merger.getTotal()+"!"+s1);
+							writeOut(outKey, outValue, context);
+						}
+					}
+				}
+				else{
+					outKey.set(sum+foundkvals1+"!"+merger.getTotal()+"!");
+					writeOut(outKey, outValue, context);
+				}
 				//foundkvals+=valueToString(foundkb,foundsize);
-				outKey.set(sum+foundkvals1+"!"+s1);
+				//outKey.set(sum+foundkvals1+"!"+s1);
 				/*Set ret = doubleVar(s1);
 				if(ret.isEmpty()){
 					s1=removeId(s1);
@@ -315,24 +376,24 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 					s1 = joinDoubleVars(ret, s1);
 					outKey.set(sum);
 				}*/
-				writeOut(outKey, outValue, context);
+				//writeOut(outKey, outValue, context);
 			}
 		}
  	}
 
 	private static int reduceJoinAllVar(byte pinakas, byte[] b1, byte[] b2, byte[] b3) {
 		int ret=0;
-		byte[] startr= new byte[1+8+8+2];
-		byte[] stopr= new byte[1+8+8+2];
+		byte[] startr= new byte[rowlength+2];
+		byte[] stopr= new byte[rowlength+2];
 		startr[0]=pinakas;
 		stopr[0]=pinakas;
-		for (int i1 = 0; i1 < 8; i1++) {
+		for (int i1 = 0; i1 < totsize; i1++) {
 			startr[i1+1]=b1[i1];
 			stopr[i1+1]=b1[i1];
 		}
-		for (int i1 = 0; i1 < 8; i1++) {
-			startr[i1+9]=b2[i1];
-			stopr[i1+9]=b2[i1];
+		for (int i1 = 0; i1 < totsize; i1++) {
+			startr[i1+1+totsize]=b2[i1];
+			stopr[i1+1+totsize]=b2[i1];
 		}
 		startr[startr.length-2] =(byte)0;
 		startr[startr.length-1] =(byte)0;
@@ -343,12 +404,14 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 		scan.setStopRow(stopr);
 		scan.setCaching(256);
 		scan.addColumn(Bytes.toBytes("A"), b3);
+		//System.out.println("scan"+ Bytes.toStringBinary(startr));
 		ResultScanner resultScanner;
 		try {
 			resultScanner = table.getScanner(scan);
 			Result re;
 			while((re = resultScanner.next())!=null){
 				if(re.size()!=0){
+					//System.out.println("found");
 					ret++;
 				}
 				if(ret>0){
@@ -367,17 +430,17 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 	private static String reduceJoin(byte pinakas, byte[] b1, byte[] b2,
 			String varname) {
 		String ret="";
-		byte[] startr= new byte[1+8+8+2];
-		byte[] stopr= new byte[1+8+8+2];
+		byte[] startr= new byte[rowlength+2];
+		byte[] stopr= new byte[rowlength+2];
 		startr[0]=pinakas;
 		stopr[0]=pinakas;
-		for (int i1 = 0; i1 < 8; i1++) {
+		for (int i1 = 0; i1 < totsize; i1++) {
 			startr[i1+1]=b1[i1];
 			stopr[i1+1]=b1[i1];
 		}
-		for (int i1 = 0; i1 < 8; i1++) {
-			startr[i1+9]=b2[i1];
-			stopr[i1+9]=b2[i1];
+		for (int i1 = 0; i1 < totsize; i1++) {
+			startr[i1+1+totsize]=b2[i1];
+			stopr[i1+1+totsize]=b2[i1];
 		}
 		startr[startr.length-2] =(byte)0;
 		startr[startr.length-1] =(byte)0;
@@ -393,13 +456,15 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 		for (int i = 0; i < a.length; i++) {
 			bid[i]=a[i];
 		}*/
-		scan.addColumn(Bytes.toBytes("A"), null);
+		scan.addFamily(Bytes.toBytes("A"));
 		ResultScanner resultScanner;
+		//System.out.println("scan"+ Bytes.toStringBinary(startr) +" stop:"+Bytes.toStringBinary(stopr));
 		try {
 			resultScanner = table.getScanner(scan);
 			Result re;
 			while((re = resultScanner.next())!=null){
 				if(re.size()!=0){
+					//System.out.println("found");
 					KeyValue[] v = re.raw();
 					for (int j = 0; j < v.length; j++) {
 						ret+=varname+"#"+vtoString(v[j].getQualifier())+"!";
@@ -438,14 +503,14 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 					StringTokenizer tokenizer = new StringTokenizer(b);
 					while(tokenizer.hasMoreTokens()) {
 						String temp = tokenizer.nextToken("_");
-						Integer id=(int)Long.parseLong(temp);
+						Integer id=CastLongToInt.castLong(Long.parseLong(temp));
 						trans_hash.add(id);
 					}
 				}
 			}
 			outKey2.set(newline);
     	}
-		if(isLast==1){// Index Translate
+		/*if(isLast==1){// Index Translate
     		StringTokenizer list;
     		list=new StringTokenizer(outKey2.toString());
     		
@@ -469,7 +534,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 				//}
 			}
 			outKey2.set(newline);
-    	}
+    	}*/
 		try {
 			context.write(outKey2, outValue2);
 		} catch (InterruptedException e) {
@@ -484,15 +549,15 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 		
 		String bindings="";
 		boolean found=false;
-		for (int i = 0; i < binding.length; i+=8) {
-			byte[] temp1 = new byte[8];
-			for (int jj = 0; jj < 8; jj++) {
+		for (int i = 0; i < binding.length; i+=totsize) {
+			byte[] temp1 = new byte[totsize];
+			for (int jj = 0; jj < totsize; jj++) {
 				temp1[jj]=binding[i+jj];
 			}
-			byte[] k = new byte[9];
+			byte[] k = new byte[1+totsize];
 			k[0]=(byte) 1;
 			
-			for (int j = 0; j < 8; j++) {
+			for (int j = 0; j < totsize; j++) {
 				k[j+1]=temp1[j];
 			}
 			Get get=new Get(k);
@@ -519,7 +584,7 @@ public class HbaseJoinBGPReducer extends Reducer<Text, Text, Text, Text> {
 		boolean ret =false;
 		int nonjno=nonJoinSizeTab[vid];
 		for (int jj = 0; jj < nonjno; jj++) {
-			if(nonJoinCol[vid][jj].contains("?")){
+			if(nonJoinCol[vid][jj]!=null){
 				return true;
 			}
 		}
@@ -536,10 +601,10 @@ private static String transform(String newline, String binding, String pred) {
 			//System.out.println(temp);
 			//System.out.println(binding);
 			byte[] temp1=Bytes.toBytes(Long.parseLong(temp));
-			byte[] k = new byte[9];
+			byte[] k = new byte[1+totsize];
 			k[0]=(byte) 1;
 			
-			for (int j = 0; j < 8; j++) {
+			for (int j = 0; j < totsize; j++) {
 				k[j+1]=temp1[j];
 			}
 			Get get=new Get(k);
@@ -652,40 +717,53 @@ private static String transform(String newline, String binding, String pred) {
 		}
 		return ret;
 	}
-	
+
 	@Override
-	protected void finalize() throws Throwable {
+	protected void cleanup(Context context)
+			throws IOException, InterruptedException {
 		if(isLast==2){
 			FileSystem fs = FileSystem.get(conf);
 			String[] idStr = conf.get("mapred.task.id").split("_");
 			short id =Short.parseShort(idStr[idStr.length-2]);
-			Path hash_file= new Path("translate/trans_hash_"+conf.get("nikos.inputfile").split("_")[1]+"_"+id);
+			Path hash_file= new Path("translate/trans_hash_"+conf.get("nikos.inputfile").split("_")[1]+"/"+id);
 			if(fs.exists(hash_file)){
 				fs.delete(hash_file, true);
 			}
 			FSDataOutputStream v = fs.create(hash_file);
 			Iterator<Integer> it = trans_hash.iterator();
+			EWAHCompressedBitmap ewahBitmap = new EWAHCompressedBitmap();
 			while(it.hasNext()){
-				int n=it.next();
-				v.writeUTF(n+"_");
+				int n= it.next();
+				
+		        ewahBitmap.set(n);
+		        
+				//v.writeUTF(n+"_");
 			}
+			ewahBitmap.serialize(v);
+			v.flush();
+			v.close();
+			//v.writeUTF("Bitmap size in bytes: "+ewahBitmap.sizeInBytes());
     	}
-		super.finalize();
+		super.cleanup(context);
 	}
-
+	
 	@Override
 	protected void setup(Context context) throws IOException, InterruptedException {
 		super.setup(context);
+		try {
+			  SUBCLASS = ByteValues.getFullValue("<http://www.w3.org/2000/01/rdf-schema#subClassOf>");
+		} catch (NotSupportedDatatypeException e) {
+			  throw new IOException("Not supported datatype");
+		}
 		conf =context.getConfiguration();
+		//System.out.println("table: "+conf.get("nikos.table"));
 		table = new HTable( hconf, conf.get("nikos.table") );
-    	FileSystem fs = FileSystem.get(conf);
-    	FSDataInputStream v = fs.open(new Path(conf.get("nikos.inputfile")));
-    	joinVars=v.readLine();
-    	v.readLine();
-    	joinNo=v.readLine();
-    	j=Integer.parseInt(v.readLine());
-    	isLast=Integer.parseInt(v.readLine());
-    	resultVars=v.readLine();
+    	joinVars=conf.get("input.joinvars");
+    	joinNo=conf.get("input.retno");
+    	j=Integer.parseInt(conf.get("input.joins"));
+    	isLast=Integer.parseInt(conf.get("input.last"));
+    	resultVars=conf.get("input.resultVars");
+    	
     	String temp=null;
     	nonJoinVarNames = new String[5];
     	nonJoinCol = new String[5][10];
@@ -695,32 +773,38 @@ private static String transform(String newline, String binding, String pred) {
     	for (int i = 0; i < nonJoinSizeTab.length; i++) {
         	nonJoinSizeTab[i]=0;
 		}
+    	Integer.parseInt(conf.get("input.reduceScans"));
     	
-    	while(!(temp=Bytes.toString(Bytes.readByteArray(v))).equals("end")){
+    	
+    	for (int i = 0; i < Integer.parseInt(conf.get("input.reduceScans")); i++) {
+    		temp=conf.get("input.reduceScans."+i+".fname");
+    		System.out.println(temp );
     		int id=getvarind(temp);
     		if(id==-1){
     			nonJoinVarNames[nonJoinSize]=temp;
     			id=nonJoinSize;
     			nonJoinSize++;
     		}
-    		
-    		
-    		byte[] rowid= Bytes.readByteArray(v);
-    		int ffound=0;
+    		System.out.println(id );
+    		byte[] rowid= Bytes.toBytesBinary(conf.get("input.reduceScans."+i+".startrow"));
+    		System.out.println(Bytes.toStringBinary(rowid));
+
+			int ffound=0;
 			byte[] subclasses = new byte[100];
-			if (rowid.length==17) {
-				byte[] objid = new byte[8];
-				for (int i = 0; i < 8; i++) {
-					objid[i]=rowid[i+9];
+			
+			if (rowid.length==rowlength) {
+				byte[] objid = new byte[totsize];
+				for (int i1 = 0; i1 < totsize; i1++) {
+					objid[i1]=rowid[i1+totsize+1];
 				}
-				byte[] classrowStart = new byte[1+8+8+2];
-				byte[] classrowStop = new byte[1+8+8+2];
+				byte[] classrowStart = new byte[rowlength+2];
+				byte[] classrowStop = new byte[rowlength+2];
 				classrowStart[0]=(byte)3; //pos
-				for (int i1 = 0; i1 < 8; i1++) {
+				for (int i1 = 0; i1 < totsize; i1++) {
 					classrowStart[i1+1]=SUBCLASS[i1];
 				}
-				for (int i1 = 0; i1 < 8; i1++) {
-					classrowStart[i1+9]=objid[i1];
+				for (int i1 = 0; i1 < totsize; i1++) {
+					classrowStart[i1+totsize+1]=objid[i1];
 				}
 				for (int i1 = 0;  i1< classrowStart.length-1; i1++) {
 					classrowStop[i1]=classrowStart[i1];
@@ -735,16 +819,18 @@ private static String transform(String newline, String binding, String pred) {
 				byte[] bid,a;
 				a=Bytes.toBytes("A");
 				bid = new byte[a.length];
-				for (int i = 0; i < a.length; i++) {
+				for (int i1 = 0; i1 < a.length; i1++) {
 					bid[i]=a[i];
 				}
 				Scan scan1 =new Scan();
 				scan1.setStartRow(classrowStart);
 				scan1.setStopRow(classrowStop);
-				scan1.setCaching(254);
+				scan1.setCaching(70000);
+				scan1.setCacheBlocks(true);
 				scan1.addFamily(bid);
+				ResultScanner resultScanner=null;
 				try {
-					ResultScanner resultScanner = table.getScanner(scan1);
+					resultScanner = table.getScanner(scan1);
 					Result result = null;
 					while((result=resultScanner.next())!=null){
 						System.out.println("Subclasses: "+result.size());
@@ -752,8 +838,8 @@ private static String transform(String newline, String binding, String pred) {
 						while(it.hasNext()){
 							KeyValue kv = it.next();
 							byte[] qq = kv.getQualifier();
-							for (int i = 0; i < 8; i++) {
-								subclasses[ffound*8 + i]=qq[i];
+							for (int i1 = 0; i1 < totsize; i1++) {
+								subclasses[ffound*totsize + i1]=qq[i1];
 							}
 							ffound++;
 						}
@@ -761,32 +847,42 @@ private static String transform(String newline, String binding, String pred) {
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
+				}finally {
+					resultScanner.close();  // always close the ResultScanner!
 				}
 			}
 			
 			if(ffound>0){
-				nonJoinStartRow[id][nonJoinSizeTab[id]] = new byte[ffound*8+rowid.length];
-				for (int i = 0; i < ffound*8+rowid.length; i++) {
-					if(i>=17 && i< ffound*8+17)
-						nonJoinStartRow[id][nonJoinSizeTab[id]][i]=subclasses[i-17];
-					else if(i<17)
-						nonJoinStartRow[id][nonJoinSizeTab[id]][i]=rowid[i];
+				nonJoinStartRow[id][nonJoinSizeTab[id]] = new byte[ffound*totsize+rowid.length];
+				for (int i1 = 0; i1 < ffound*totsize+rowid.length; i1++) {
+					if(i1>=rowlength && i1< ffound*totsize+rowlength)
+						nonJoinStartRow[id][nonJoinSizeTab[id]][i1]=subclasses[i1-rowlength];
+					else if(i1<rowlength)
+						nonJoinStartRow[id][nonJoinSizeTab[id]][i1]=rowid[i1];
 				}	
 			}
 			else{
 				nonJoinStartRow[id][nonJoinSizeTab[id]] = new byte[rowid.length];
-				for (int i = 0; i < rowid.length; i++) {
-					nonJoinStartRow[id][nonJoinSizeTab[id]][i]=rowid[i];
+				for (int i1 = 0; i1 < rowid.length; i1++) {
+					nonJoinStartRow[id][nonJoinSizeTab[id]][i1]=rowid[i1];
 				}
 			}
-    		//nonJoinStartRow[id][nonJoinSizeTab[id]]=Bytes.readByteArray(v); sos xwris subclass
-    		nonJoinCol[id][nonJoinSizeTab[id]]=Bytes.toString(Bytes.readByteArray(v));
+			//System.out.println(conf.get("input.reduceScans."+i+".columns"));
+    		nonJoinCol[id][nonJoinSizeTab[id]]=conf.get("input.reduceScans."+i+".columns");
+    		if(nonJoinCol[id][nonJoinSizeTab[id]]==null)
+    			nonJoinCol[id][nonJoinSizeTab[id]]="";
     		nonJoinSizeTab[id]++;
-    	}
+    	
+    		/*nonJoinStartRow[id][nonJoinSizeTab[id]] = new byte[rowid.length];
+			for (int i2 = 0; i2 < rowid.length; i2++) {
+				nonJoinStartRow[id][nonJoinSizeTab[id]][i2]=rowid[i2];
+			}
+    		nonJoinCol[id][nonJoinSizeTab[id]]=joinConf.get("input.reduceScans."+i+".columns");
+    		nonJoinSizeTab[id]++;*/
+		}
     	//printNonJoin();
-    	v.close();
     	if(isLast==2){
-    		trans_hash = new HashSet<Integer>();
+    		trans_hash = new TreeSet<Integer>();
     	}
 	}
 
@@ -801,15 +897,14 @@ private static String transform(String newline, String binding, String pred) {
 		}
 	}
 	
-	private static String vtoString(byte[] value) {
-		  long v = Bytes.toLong(value);
-		
-		  if(value.length!=8){
-			  System.out.println(v);
-			  System.exit(1);
+	private static String vtoString(byte[] value) throws IOException {
+		  try {
+			  //System.out.println(ByteValues.getStringValue(value));
+			return ByteValues.getStringValue(value)+"_";
+		  } catch (NotSupportedDatatypeException e) {
+			  throw new IOException("Not supported datatype");
 		  }
-		  return String.valueOf(v)+"_";
-		}
+	}
 
 	private int getvarind(String var) {
 		for (int i = 0; i < nonJoinVarNames.length; i++) {
@@ -819,5 +914,6 @@ private static String transform(String newline, String binding, String pred) {
 		}
 		return -1;
 	}
+
 	
 }

@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package byte_import;
 
 import java.util.Random;
@@ -10,7 +20,7 @@ public class MyNewTotalOrderPartitioner<VALUE> extends Partitioner<ImmutableByte
 	//private static Random g1= new Random();
 	
 	public static final int MAX_HBASE_ROWS = 45;
-	public static final int MAX_HBASE_BUCKETS = 254;
+	public static final int MAX_HBASE_BUCKETS = 255;
 	private static final byte[] SUBCLASS = Bytes.toBytes( new Long("8742859611446415633"));
 	
 	@Override

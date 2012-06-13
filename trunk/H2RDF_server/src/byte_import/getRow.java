@@ -1,28 +1,39 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package byte_import;
 
 import java.io.IOException;
+import java.util.Iterator;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.MD5Hash;
-import org.apache.hadoop.util.hash.Hash;
-import org.apache.hadoop.util.hash.JenkinsHash;
+
+import bytes.ByteValues;
+import bytes.NotSupportedDatatypeException;
 
 public class getRow {
 
 	/**
 	 * @param args
 	 */
-    private static Hash h = JenkinsHash.getInstance();
-	private static HBaseConfiguration hconf=new HBaseConfiguration();
+	private static Configuration hconf = HBaseConfiguration.create();
     
-	public static void main(String[] args) {
-		//getHash("");
-		byte[] row = getRowIdbyte("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
+	public static void main(String[] args) throws NotSupportedDatatypeException {
+		byte[] row = ByteValues.getFullValue("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
+		//byte[] row = ByteValues.getFullValue("<http://www.gate.ac.uk/ns/ontologies/arcomem-data-model.rdf#kyotoDomainRelevance>");
 		//byte[] row = getRowIdbyte("<http://www.w3.org/2000/01/rdf-schema#subClassOf>");
 		/*getRowIdbyte("<http://www.w3.org/2000/01/rdf-schema#subClassOf>");
 		getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateCourse>");
@@ -30,85 +41,54 @@ public class getRow {
 		getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Dean>");
 		getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#FullProfessor>");
 		getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#FullProfessor>");*/
-		byte[] col=getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Course>");
-		byte[] r = new byte[19];
-		r[0]=(byte) 3;
-		for (int i = 0; i < 8; i++) {
-			r[i+1]=row[i];
+		//byte[] col=getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Course>");
+		byte[] col=ByteValues.getFullValue("<http://www.gate.ac.uk/ns/ontologies/arcomem-data-model.rdf#Term>");
+		//byte[] col=ByteValues.getFullValue("\"64.53327\"^^<http://www.w3.org/2001/XMLSchema#double>");
+		byte[] startr = new byte[1+2*ByteValues.totalBytes+2];
+		byte[] stopr = new byte[1+2*ByteValues.totalBytes+2];
+		startr[0]=(byte) 3;
+		stopr[0]=(byte) 3;
+		for (int i = 0; i < ByteValues.totalBytes; i++) {
+			startr[i+1]=row[i];
+			stopr[i+1]=row[i];
 		}
-		for (int i = 0; i < 8; i++) {
-			r[i+9]=col[i];
+		for (int i = 0; i < ByteValues.totalBytes; i++) {
+			startr[i+ByteValues.totalBytes+1]=col[i];
+			stopr[i+ByteValues.totalBytes+1]=col[i];
 		}
+		startr[1+2*ByteValues.totalBytes]=(byte)0;
+		stopr[1+2*ByteValues.totalBytes]=(byte)255;
+		startr[1+2*ByteValues.totalBytes+1]=(byte)0;
+		stopr[1+2*ByteValues.totalBytes+1]=(byte)255;
 		try {
 			HTable table=null;
-			table = new HTable( hconf, "new2" );
-			/*for (int i = 0; i < 35; i++) {
-				r[17]=(byte) i;
-				Get get = new Get(r);
-				table = new HTable( hconf, "new2" );
-				Result res = table.get(get);
-				System.out.println("row: "+Bytes.toStringBinary(r)+" size: "+res.size());
-				//System.out.println("starttttttttttttttttttttttttt");
-				//System.out.println(res.size());
-				//int j=0;
-				//for (int j2 = 0; j2 < l.length; j2++) {
-				//	System.out.println(i+" "+valueToString(result.getCellValue().getValue()));
-				//	i++;
-				//}
-				
-			}*/
-			r[17]=(byte) 255;
-			r[18]=(byte) 255;
+			table = new HTable( hconf, "ARCOMEMDB" );
+			Scan scan =new Scan();
+			
+			scan.setStartRow(startr);
+			scan.setStopRow(stopr);
+			Iterator<Result> it = table.getScanner(scan).iterator();
+			while(it.hasNext()){
+				Result res = it.next();
+				if(res.size()>0)
+					System.out.println("row: "+Bytes.toStringBinary(res.getRow())+" size: "+res.size());
+			}
+			byte[] r = new byte[1+2*ByteValues.totalBytes];
+			r[0]=(byte) 3;
+			for (int i = 0; i < ByteValues.totalBytes; i++) {
+				r[i+1]=row[i];
+			}
+			for (int i = 0; i < ByteValues.totalBytes; i++) {
+				r[i+ByteValues.totalBytes+1]=col[i];
+			}
 			Get get = new Get(r);
+			table = new HTable( hconf, "ARCOMEMDB_stats" );
 			Result res = table.get(get);
 			if(res.size()>0)
-				System.out.println("row: "+Bytes.toStringBinary(r)+" size: "+Bytes.toLong(res.raw()[0].getQualifier()));
-			System.out.println(table.getRegionLocation(r).getRegionInfo().getRegionId());
+				System.out.println("row: "+Bytes.toStringBinary(r)+" size: "+Bytes.toLong(res.getValue(Bytes.toBytes("size"), Bytes.toBytes(""))));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
 
-	}
-	
-
-	private static byte[] getRowIdbyte(String string) {
-		//Integer hashVal = Integer.parseInt(string);
-		MD5Hash j = MD5Hash.digest(string);
-		long hashVal= Math.abs(j.halfDigest());
-		//byte[] bst=Bytes.toBytes(string);
-		//Integer hashVal = Math.abs(h.hash(bst, bst.length, 0));
-		System.out.println("string: "+string+" hashval: "+hashVal);
-		byte[] ret = Bytes.toBytes(hashVal);
-		System.out.println("string: "+string+" hashval: "+hashVal+" bytes: "+Bytes.toStringBinary(ret));
-		//String ret = MD5Hash.digest(string).toString();
-		if (ret.length==8)
-			return ret;
-		else 
-			return null;
-		
-	}
-	
-	private static void getHash(String string) {
-		char[] ch= string.toCharArray();
-		String num = "", str = "";
-		for (int i = 0; i < ch.length; i++) {
-			if(ch[i]>='0' && ch[i]<='9'){
-				num+=ch[i];
-			}
-			else{
-				str+=ch[i];
-			}
-		}
-		byte[] nu=Bytes.toBytes(num);
-		Integer hashVal1 = Math.abs(h.hash(nu, nu.length, 0));
-		byte[] st=Bytes.toBytes(str);
-		Integer hashVal2 = Math.abs(h.hash(st, st.length, 0));
-		System.out.println(hashVal1+" "+hashVal2);
-		//Integer sunolo = hashVal
-		System.out.println(str);
-		System.out.println(num);
-		
 	}
 }

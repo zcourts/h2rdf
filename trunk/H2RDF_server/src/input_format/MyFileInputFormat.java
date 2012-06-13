@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package input_format;
 
 import java.io.IOException;
@@ -252,10 +262,14 @@ public abstract class MyFileInputFormat<K, V> extends InputFormat<K, V> {
       }
     }
     LOG.debug("Total # of splits: " + splits.size());
-	  if(splits.size()<=HexastoreBulkImport.MAX_TASKS)
+    
+    String p=job.getConfiguration().get("mapred.fairscheduler.pool");
+	  int max = Integer.parseInt(p.substring(p.indexOf("l")+1));
+	  
+	  if(splits.size()<=max)
 		  job.getConfiguration().setInt("mapred.reduce.tasks", splits.size());
 	  else
-		  job.getConfiguration().setInt("mapred.reduce.tasks", HexastoreBulkImport.MAX_TASKS);
+		  job.getConfiguration().setInt("mapred.reduce.tasks", max);
     return splits;
   }
 

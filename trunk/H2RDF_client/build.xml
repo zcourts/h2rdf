@@ -41,7 +41,7 @@
     <target name="jar" depends="compile" description="Generates executable jar file">
         <jar jarfile="H2RDF_client.jar">
                 <manifest>
-                        <attribute name="Main-Class" value="gr.ntua.h2rdf.examples.QueryExample"/>
+                        <attribute name="Main-Class" value="gr.ntua.h2rdf.examples.SimplifiedApiExample"/>
                         <attribute name="Class-Path" value="${test.project.manifest.classpath}"/>
                 </manifest>
                 <fileset dir="build" includes="**/*.class"/>                    

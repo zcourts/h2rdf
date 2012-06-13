@@ -1,9 +1,22 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package input_format;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import javaewah.EWAHCompressedBitmap;
+
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -18,6 +31,8 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.hbase.io.hfile.HFile.Reader;
+import org.apache.hadoop.hbase.io.hfile.CacheConfig;
+import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.HFileScanner;
 
 import com.ibm.icu.util.StringTokenizer;
@@ -25,6 +40,8 @@ import com.ibm.icu.util.StringTokenizer;
 import partialJoin.BufferedRecordWriter;
 
 import byte_import.MyNewTotalOrderPartitioner;
+import bytes.ByteValues;
+import bytes.NotSupportedDatatypeException;
 
 
 public class HFileRecordReaderBufferedNoScan
@@ -37,7 +54,7 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 	  private HFileScanner scanner = null;
 	  private KeyValue kv=null;
 	  private boolean more=false;
-	  private HBaseConfiguration HBconf = new HBaseConfiguration();
+	  private final Configuration HBconf = HBaseConfiguration.create();
 	  private byte[] stopr;
 	  
 	  private static long id;
@@ -102,9 +119,13 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 	  TaskAttemptContext context) throws IOException,
 	  InterruptedException {
 	  tsplit=(TableColumnSplit) inputsplit;
+	  
 	  HTable table = new HTable( HBconf, tsplit.getTable() );
+	  //HTable table = new HTable( HBconf, "H2RDF" );
+	  
 	  //table.flushCommits();
 	  byte[] startr =tsplit.getStartRow();
+
 	  stopr = tsplit.getStopRow();
 		System.out.println("start: "+Bytes.toStringBinary(startr));
 		System.out.println("stop: "+Bytes.toStringBinary(stopr));
@@ -130,7 +151,9 @@ extends RecordReader<ImmutableBytesWritable, Text> {
     	  file=new Path(dir+"/"+hfile.getName());
       }
       System.out.println(dir+"/"+file.getName());
-      reader = new Reader(fs, file, null, false);
+      
+      reader = HFile.createReader(fs, file, new CacheConfig(HBconf));
+      //reader = new Reader(fs, file, null, false);
 
 	  // Load up the index.
 	  reader.loadFileInfo();
@@ -151,29 +174,36 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 			  break;
 		  }
 	  }
-	  
-	  FSDataInputStream v = fs.open(new Path(context.getConfiguration().get("nikos.inputfile")));
-	  BufferedReader read = new BufferedReader(new InputStreamReader(v));
-	  read.readLine();
-	  read.readLine();
-	  v.close();
-	  String vars=tsplit.getVars();
-	  StringTokenizer vtok = new StringTokenizer(vars);
-	  varsno=0;
-	  while(vtok.hasMoreTokens()){
-		  vtok.nextToken();
-		  varsno++;
+
+	  if(!tsplit.getFname().startsWith("T")){
+		  	/*FSDataInputStream v = fs.open(new Path(context.getConfiguration().get("nikos.inputfile")));
+		  	BufferedReader read = new BufferedReader(new InputStreamReader(v));
+		  	read.readLine();
+	  		read.readLine();
+	  		v.close();*/
+		  
+	  		String vars=tsplit.getVars();
+	  		System.out.println(vars);
+	  		StringTokenizer vtok = new StringTokenizer(vars);
+	  		varsno=0;
+	  		while(vtok.hasMoreTokens()){
+	  			vtok.nextToken();
+	  			varsno++;
+	  		}
+	  		if(varsno==1){
+	  			StringTokenizer vtok2 = new StringTokenizer(vars);
+	  			v1=vtok2.nextToken();
+	  		}
+	  		else if(varsno==2){
+	  			StringTokenizer vtok2 = new StringTokenizer(vars);
+	  			v1=vtok2.nextToken();
+	  			v2=vtok2.nextToken();
+	  		}
+	  		progress=(float) 0.2;
 	  }
-	  if(varsno==1){
-		  StringTokenizer vtok2 = new StringTokenizer(vars);
-		  v1=vtok2.nextToken();
+	  else{
+		  varsno=15;
 	  }
-	  else if(varsno==2){
-		  StringTokenizer vtok2 = new StringTokenizer(vars);
-		  v1=vtok2.nextToken();
-		  v2=vtok2.nextToken();
-	  }
-	  progress=(float) 0.2;
   }
 
   /**
@@ -193,83 +223,106 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 	  if(!scanner.isSeeked()){//bug
 		  return false;
 	  }
-	  if(varsno==0){ 
-		  if(Bytes.compareTo(kv.getRow(), stopr)<=0){
-			  key.set(kv.getRow());
-			  value.set(tsplit.getFname()+"!"
-						  +Bytes.toString(kv.getValue()));
-		      more=scanner.next();
-		      if(more)
-				  kv = scanner.getKeyValue();
-			  return more;
-		  }
-		  return false;
-		  
-	  }
-	  if(kv.getRow()[17]==(byte)255){
-		  more=scanner.next();
-		  if(more){
-			  kv = scanner.getKeyValue();
-			  //return nextKeyValue();
-		  }
-		  return more;
-	  }
-	  if(varsno==1){
-		  if(Bytes.compareTo(kv.getRow(), stopr)<=0){
-			  value.set(tsplit.getFname()+"!"+v1+"#"
-						  +Bytes.toLong(kv.getQualifier())+"_");
-		      more=scanner.next();
-		      if(more)
-				  kv = scanner.getKeyValue();
-			  return more;
-		  }
-		  return false;
-	  }
-	  else if(varsno==2){
-		  if(Bytes.compareTo(kv.getRow(), stopr)<=0){
-			  byte[] curkey=kv.getRow();
-			  byte[] r1= new byte[8];
-			  for (int j = 0; j < r1.length; j++) {
-				  r1[j]=curkey[9+j];
+
+	  try {
+		  if(varsno==15){
+			  if(Bytes.compareTo(kv.getRow(), stopr)<=0){
+				  byte[] indexKey = kv.getRow();
+				  byte[] indexKey1 = new byte[ByteValues.totalBytes];
+				  for (int i = 0; i < indexKey1.length; i++) {
+					  indexKey1[i]=indexKey[i+1];
+				  }
+				  value.set(tsplit.getFname()+"!"+ByteValues.getStringValue(indexKey1)+"$$"
+							  +Bytes.toString(kv.getValue()));
+			      more=scanner.next();
+			      if(more)
+					  kv = scanner.getKeyValue();
+				  return more;
 			  }
-			  String pat=tsplit.getFname()+"!"+v1+"#"+Bytes.toLong(r1);
-			  String buffer="!"+v2+"#"+Bytes.toLong(kv.getQualifier())+"_";
-			  boolean flush=false;
-			  while(scanner.next() && rowEquals((kv = scanner.getKeyValue()).getRow(), curkey)){
-				  if(kv.getRow()[17]!=(byte)255){
-					  buffer+=Bytes.toLong(kv.getQualifier())+"_";
+			  return false;
+			  
+		  }
+		  
+		  if(varsno==0){ 
+			  if(Bytes.compareTo(kv.getRow(), stopr)<=0){
+				  key.set(kv.getRow());
+				  value.set(tsplit.getFname()+"!"
+							  +ByteValues.getStringValue(kv.getValue()));
+			      more=scanner.next();
+			      if(more)
+					  kv = scanner.getKeyValue();
+				  return more;
+			  }
+			  return false;
+			  
+		  }
+		  /*if(kv.getRow()[17]==(byte)255){
+			  more=scanner.next();
+			  if(more){
+				  kv = scanner.getKeyValue();
+				  //return nextKeyValue();
+			  }
+			  return more;
+		  }*/
+		  if(varsno==1){
+			  if(Bytes.compareTo(kv.getRow(), stopr)<=0){
+				  value.set(tsplit.getFname()+"!"+v1+"#"
+						  +ByteValues.getStringValue(kv.getQualifier())+"_");
+			      more=scanner.next();
+			      if(more)
+					  kv = scanner.getKeyValue();
+				  return more;
+			  }
+			  return false;
+		  }
+		  else if(varsno==2){
+			  if(Bytes.compareTo(kv.getRow(), stopr)<=0){
+				  byte[] curkey=kv.getRow();
+				  byte[] r1= new byte[ByteValues.totalBytes];
+				  for (int j = 0; j < r1.length; j++) {
+					  r1[j]=curkey[ByteValues.totalBytes+1+j];
+				  }
+				  String pat=tsplit.getFname()+"!"+v1+"#"+ByteValues.getStringValue(r1);
+				  String buffer="!"+v2+"#"+ByteValues.getStringValue(kv.getQualifier())+"_";
+				  boolean flush=false;
+				  while(scanner.next() && rowEquals((kv = scanner.getKeyValue()).getRow(), curkey)){
+					  buffer+=ByteValues.getStringValue(kv.getQualifier())+"_";
 					  if(buffer.length()>=10000){
 						  value.set(pat+buffer);
 						  flush=true;
 						  break;
 					  }
 				  }
-			  }
-			  if(!flush){
-				  value.set(pat+buffer);
-				  if(!Bytes.equals(kv.getRow(), curkey)){
-					  return true;
+				  if(!flush){
+					  value.set(pat+buffer);
+				  //System.out.println(pat+buffer);
+					  if(!Bytes.equals(kv.getRow(), curkey)){
+						  return true;
+					  }
+					  else{
+						  return false;
+					  }
 				  }
 				  else{
-					  return false;
+					  more=scanner.next();
+				      if(more)
+						  kv = scanner.getKeyValue();
+					  return more;
 				  }
 			  }
-			  else{
-				  more=scanner.next();
-			      if(more)
-					  kv = scanner.getKeyValue();
-				  return more && kv.getRow()[17]!=(byte)255;
-			  }
-		  }
-		  return false;
-	  }	
+			  return false;
+		  }	
+	  } catch (NotSupportedDatatypeException e) {
+		  throw new InterruptedException("Not supported datatype");
+	  }
+	  
 	  return false;  
   }
   
 
   private boolean rowEquals(byte[] row, byte[] curkey) {
 	  boolean ret=true;
-	  for (int i = 0; i < 17; i++) {
+	  for (int i = 0; i < 1+2*ByteValues.totalBytes; i++) {
 		  if(row[i]!=curkey[i]){
 			  ret=false;
 			  break;

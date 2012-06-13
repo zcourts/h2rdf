@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Nikos Papailiou. 
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ * 
+ * Contributors:
+ *     Nikos Papailiou - initial API and implementation
+ ******************************************************************************/
 package input_format;
 
 import java.io.BufferedReader;
@@ -24,6 +34,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.io.Text;
 
 import byte_import.MyNewTotalOrderPartitioner;
+import bytes.ByteValues;
+import bytes.NotSupportedDatatypeException;
 
 public class HFileRecordReaderBufferedScan
 extends RecordReader<ImmutableBytesWritable, Text> {
@@ -36,7 +48,7 @@ extends RecordReader<ImmutableBytesWritable, Text> {
   private TableColumnSplit tsplit = null;
   private Scan scan = null;
   private KeyValue kv=null;
-  private HBaseConfiguration HBconf = new HBaseConfiguration();
+  private final Configuration HBconf = HBaseConfiguration.create();
   private boolean empty, more;
   private int varsno; 
   private String v1, v2;
@@ -116,7 +128,8 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 	  
 	  scan.setStartRow(tsplit.getStartRow());
 	  scan.setStopRow(tsplit.getStopRow());
-	  scan.setCaching(50);
+	  //scan.setCaching(1);//50
+	  scan.setBatch(11000);
 	  byte[] a, bid=null;
 	  a=Bytes.toBytes("A");
 	  bid = new byte[a.length];
@@ -125,7 +138,7 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 	  }
 	  
 		//System.out.println(Bytes.toStringBinary(bid));
-		scan.addColumn(bid);
+		scan.addFamily(bid);
 	  
 		HTable table = new HTable( HBconf, tsplit.getTable() );
 		resultScanner = table.getScanner(scan);
@@ -155,16 +168,10 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 		  kv=list.next();
 	  }
 	  
-	  Path joinvarsf=new Path("input/JoinVars");
 	  Configuration conf = context.getConfiguration();
-	  FileSystem fs = joinvarsf.getFileSystem(conf);
-	  FSDataInputStream v = fs.open(new Path(context.getConfiguration().get("nikos.inputfile")));
-	  BufferedReader read = new BufferedReader(new InputStreamReader(v));
-	  read.readLine();
-	  String newjoinVars=read.readLine();
+	  String newjoinVars=conf.get("input.patId");
 	  String joinVars = newjoinVars.split(tsplit.getFname())[1];
 	  joinVars=joinVars.substring(0, joinVars.indexOf("$$")-1);
-	  v.close();
 	  String vars=tsplit.getVars();
 	  StringTokenizer vtok = new StringTokenizer(vars);
 	  varsno=0;
@@ -199,51 +206,55 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 	  if(!more)
 		  return refresh();
 
-	  if(varsno==1){
-		  value.set(tsplit.getFname()+"!"+v1+"#"
-					  +Bytes.toLong(kv.getQualifier())+"_");
-	      more=list.hasNext();
-	      if(more)
-			  kv = list.next();
-		  return refresh();
-	  }
-	  else if(varsno==2){
-			  byte[] curkey=kv.getRow().clone();
-			  byte[] r1= new byte[8];
-			  for (int j = 0; j < r1.length; j++) {
-				  r1[j]=curkey[9+j];
-			  }
-			  String pat=tsplit.getFname()+"!"+v1+"#"+Bytes.toLong(r1);
-			  String buffer="!"+v2+"#"+Bytes.toLong(kv.getQualifier())+"_";
-			  boolean flush=false;
-			  while(list.hasNext() && rowEquals((kv = list.next()).getRow(), curkey)){
-				  //if(kv.getRow()[17]!=(byte)255){
-					  buffer+=Bytes.toLong(kv.getQualifier())+"_";
-					  if(buffer.length()>=10000){
-						  value.set(pat+buffer);
-						  flush=true;
-						  break;
+	  try {
+		  if(varsno==1){
+			value.set(tsplit.getFname()+"!"+v1+"#"
+								  +ByteValues.getStringValue(kv.getQualifier())+"_");
+		      more=list.hasNext();
+		      if(more)
+				  kv = list.next();
+			  return refresh();
+		  }
+		  else if(varsno==2){
+				  byte[] curkey=kv.getRow().clone();
+				  byte[] r1= new byte[ByteValues.totalBytes];
+				  for (int j = 0; j < r1.length; j++) {
+					  r1[j]=curkey[ByteValues.totalBytes+1+j];
+				  }
+				  String pat=tsplit.getFname()+"!"+v1+"#"+ByteValues.getStringValue(r1);
+				  String buffer="!"+v2+"#"+ByteValues.getStringValue(kv.getQualifier())+"_";
+				  boolean flush=false;
+				  while(list.hasNext() && rowEquals((kv = list.next()).getRow(), curkey)){
+					  //if(kv.getRow()[17]!=(byte)255){
+						  buffer+=ByteValues.getStringValue(kv.getQualifier())+"_";
+						  if(buffer.length()>=10000){
+							  value.set(pat+buffer);
+							  flush=true;
+							  break;
+						  }
+					  //}
+				  }
+				  if(!flush){
+					  value.set(pat+buffer);
+					  if(!Bytes.equals(kv.getRow(), curkey)){
+						  more=true;
+						  return more;
 					  }
-				  //}
-			  }
-			  if(!flush){
-				  value.set(pat+buffer);
-				  if(!Bytes.equals(kv.getRow(), curkey)){
-					  more=true;
-					  return more;
+					  else{
+						  more=false;
+						  return refresh();
+					  }
 				  }
 				  else{
-					  more=false;
-					  return refresh();
+					  more=list.hasNext();
+				      if(more)
+						  kv = list.next();
+					  return refresh();//&& kv.getRow()[17]!=(byte)255;
 				  }
-			  }
-			  else{
-				  more=list.hasNext();
-			      if(more)
-					  kv = list.next();
-				  return refresh();//&& kv.getRow()[17]!=(byte)255;
-			  }
-	  }	
+		  }	
+	  } catch (NotSupportedDatatypeException e) {
+		  throw new InterruptedException("Not supported datatype");
+	  }
 	  return false; 
   }
 	  
@@ -272,7 +283,7 @@ extends RecordReader<ImmutableBytesWritable, Text> {
 
 private boolean rowEquals(byte[] row, byte[] curkey) {
 	  boolean ret=true;
-	  for (int i = 0; i < 17; i++) {
+	  for (int i = 0; i < 1+2*ByteValues.totalBytes; i++) {
 		  if(row[i]!=curkey[i]){
 			  ret=false;
 			  break;
