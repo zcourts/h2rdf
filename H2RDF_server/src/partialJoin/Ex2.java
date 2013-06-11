@@ -17,6 +17,10 @@
 package partialJoin;
 
 import com.hp.hpl.jena.query.* ;
+import com.hp.hpl.jena.sparql.algebra.Algebra;
+import com.hp.hpl.jena.sparql.algebra.MyOpVisitor;
+import com.hp.hpl.jena.sparql.algebra.Op;
+import com.hp.hpl.jena.sparql.algebra.OpWalker;
 
 
 /** Example 1 : Execute a simple SELECT query on a model
@@ -131,9 +135,16 @@ public class Ex2
 		"?x ub:memberOf ?z}";
         
         
-        String inp = prolog + NL + args[0];
-        //System.out.println(inp);
+        String inp = prolog + NL + args[1];
+        System.out.println(inp);
         
+        Query query = QueryFactory.create(inp) ;
+        Op opQuery = Algebra.compile(query) ;
+        System.out.println(opQuery) ;
+        MyOpVisitor v = new MyOpVisitor("0", query);
+        JoinPlaner.setTable(args[0], "4", "-1");
+        JoinPlaner.setQuery(query);
+        OpWalker.walk(opQuery, v);
         /*
          * old version
         Query query = QueryFactory.create(inp) ;

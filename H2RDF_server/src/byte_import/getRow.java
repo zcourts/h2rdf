@@ -33,6 +33,7 @@ public class getRow {
     
 	public static void main(String[] args) throws NotSupportedDatatypeException {
 		byte[] row = ByteValues.getFullValue("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
+		byte[] col=ByteValues.getFullValue("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent>");
 		//byte[] row = ByteValues.getFullValue("<http://www.gate.ac.uk/ns/ontologies/arcomem-data-model.rdf#kyotoDomainRelevance>");
 		//byte[] row = getRowIdbyte("<http://www.w3.org/2000/01/rdf-schema#subClassOf>");
 		/*getRowIdbyte("<http://www.w3.org/2000/01/rdf-schema#subClassOf>");
@@ -42,7 +43,7 @@ public class getRow {
 		getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#FullProfessor>");
 		getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#FullProfessor>");*/
 		//byte[] col=getRowIdbyte("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Course>");
-		byte[] col=ByteValues.getFullValue("<http://www.gate.ac.uk/ns/ontologies/arcomem-data-model.rdf#Term>");
+		//byte[] col=ByteValues.getFullValue("<http://www.gate.ac.uk/ns/ontologies/arcomem-data-model.rdf#Term>");
 		//byte[] col=ByteValues.getFullValue("\"64.53327\"^^<http://www.w3.org/2001/XMLSchema#double>");
 		byte[] startr = new byte[1+2*ByteValues.totalBytes+2];
 		byte[] stopr = new byte[1+2*ByteValues.totalBytes+2];
@@ -62,7 +63,7 @@ public class getRow {
 		stopr[1+2*ByteValues.totalBytes+1]=(byte)255;
 		try {
 			HTable table=null;
-			table = new HTable( hconf, "ARCOMEMDB" );
+			table = new HTable( hconf, "H2RDF2000" );
 			Scan scan =new Scan();
 			
 			scan.setStartRow(startr);
@@ -70,10 +71,12 @@ public class getRow {
 			Iterator<Result> it = table.getScanner(scan).iterator();
 			while(it.hasNext()){
 				Result res = it.next();
-				if(res.size()>0)
+				if(res.size()>0){
+					
 					System.out.println("row: "+Bytes.toStringBinary(res.getRow())+" size: "+res.size());
+				}
 			}
-			byte[] r = new byte[1+2*ByteValues.totalBytes];
+			/*byte[] r = new byte[1+2*ByteValues.totalBytes];
 			r[0]=(byte) 3;
 			for (int i = 0; i < ByteValues.totalBytes; i++) {
 				r[i+1]=row[i];
@@ -85,7 +88,7 @@ public class getRow {
 			table = new HTable( hconf, "ARCOMEMDB_stats" );
 			Result res = table.get(get);
 			if(res.size()>0)
-				System.out.println("row: "+Bytes.toStringBinary(r)+" size: "+Bytes.toLong(res.getValue(Bytes.toBytes("size"), Bytes.toBytes(""))));
+				System.out.println("row: "+Bytes.toStringBinary(r)+" size: "+Bytes.toLong(res.getValue(Bytes.toBytes("size"), Bytes.toBytes(""))));*/
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
