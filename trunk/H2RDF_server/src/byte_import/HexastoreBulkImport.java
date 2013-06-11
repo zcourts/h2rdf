@@ -187,7 +187,7 @@ public class HexastoreBulkImport implements Tool {
 					newKey[newKey.length-1]=tid[1];
 				}*/
 				
-				
+				//System.out.println(Bytes.toStringBinary(newKey));
 				ImmutableBytesWritable emmitedKey = new ImmutableBytesWritable(
 						newKey, 0, newKey.length);
 				byte[] val = new byte[totsize];
@@ -247,7 +247,7 @@ public class HexastoreBulkImport implements Tool {
 		  	regionId=0;
 		  	first=0;
 			String t = context.getConfiguration().get("h2rdf.tableName");
-		  	statsTable=new HTable(t+"_stats" );
+		  	statsTable=new HTable(HBaseConfiguration.create(), Bytes.toBytes(t+"_stats") );
 			int reducersNum=Integer.parseInt(context.getConfiguration().get("mapred.reduce.tasks"));
 			max_regions=Short.MAX_VALUE/reducersNum;
 		}
@@ -269,7 +269,7 @@ public class HexastoreBulkImport implements Tool {
 		job = new Job(new Configuration(), NAME);
 		job.setJarByClass(HexastoreBulkImport.class);
 		job.setMapperClass(sampler.TotalOrderPrep.Map.class);
-		job.setReducerClass(Reducer.class);
+		job.setReducerClass(Reduce.class);
 		job.setCombinerClass(Combiner.class);
 		job.setMapOutputKeyClass(ImmutableBytesWritable.class);
 		job.setMapOutputValueClass(ImmutableBytesWritable.class);
