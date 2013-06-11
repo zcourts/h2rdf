@@ -263,9 +263,10 @@ public abstract class MyFileInputFormat<K, V> extends InputFormat<K, V> {
     }
     LOG.debug("Total # of splits: " + splits.size());
     
-    String p=job.getConfiguration().get("mapred.fairscheduler.pool");
-	  int max = Integer.parseInt(p.substring(p.indexOf("l")+1));
-	  
+    //String p=job.getConfiguration().get("mapred.fairscheduler.pool");
+	  //int max = Integer.parseInt(p.substring(p.indexOf("l")+1));
+	int max=1000;  
+    
 	  if(splits.size()<=max)
 		  job.getConfiguration().setInt("mapred.reduce.tasks", splits.size());
 	  else
