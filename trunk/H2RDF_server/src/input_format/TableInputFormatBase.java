@@ -131,9 +131,9 @@ private static byte[] SUBCLASS;//Bytes.toBytes( new Long("8742859611446415633"))
   @Override
   public List<InputSplit> getSplits(JobContext context) throws IOException {
 	  
-	  String p=context.getConfiguration().get("mapred.fairscheduler.pool");
-	  max_tasks = Integer.parseInt(p.substring(p.indexOf("l")+1));
-	  
+	 // String p=context.getConfiguration().get("mapred.fairscheduler.pool");
+	  //max_tasks = Integer.parseInt(p.substring(p.indexOf("l")+1));
+	  max_tasks=1000;
 	  Iterator<Scan> scanIterator = scanList.iterator();
 	  Iterator<String> tableIterator = tableList.iterator();
 	  Iterator<String> varsIterator = varList.iterator();

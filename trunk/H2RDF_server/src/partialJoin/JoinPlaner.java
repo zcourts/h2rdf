@@ -371,7 +371,7 @@ public class JoinPlaner {
 
 	public static String getNextJoin() throws NotSupportedDatatypeException {
 		joinConf = new Configuration();
-		joinConf.set("mapred.fairscheduler.pool", pool);
+		//joinConf.set("mapred.fairscheduler.pool", pool);
 		joinpat="";
     	join_files = new String[0];
     	join_files_vars = new String[0];
