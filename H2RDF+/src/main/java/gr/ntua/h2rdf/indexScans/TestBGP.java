@@ -48,9 +48,9 @@ public class TestBGP {
 		Var o = Var.alloc("y");
 		//Node o = Node.createVariable("y");
 		Triple tr = new Triple(s,p,o);
-		String address = "clone17";
+		String address = "master";
 		String t = "LK1";
-		String user = "npapa";
+		String user = "username";
 		H2RDFConf conf = new H2RDFConf(address, t, user);
 		Configuration hconf = conf.getConf();
 		HTable table=null, indexTable=null;

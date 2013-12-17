@@ -103,7 +103,7 @@ public class QueryExample {
         String q9 = prolog + NL +
 		"SELECT  ?x ?z ?y " +
 		"WHERE   { ?x rdf:type ub:Student ." +
-		"?z rdf:type ub:Faculty ." +
+		"?z rdf:type ub:Professor ." +
 		"?y rdf:type ub:Course ."+
 		"?x ub:advisor ?z ." +
 		"?x ub:takesCourse ?y ." +
@@ -150,9 +150,9 @@ public class QueryExample {
         		"} group by ?lang ";
         
         try {
-        	String address = "clone17";
-    		String t = "L10K";
-    		String user = "npapa";
+        	String address = "master";
+    		String t = "L3";
+    		String user = "username";
     		H2RDFConf conf = new H2RDFConf(address, t, user);
     		Configuration hconf = conf.getConf();
     		hconf.set("hbase.rpc.timeout", "3600000");
@@ -164,7 +164,7 @@ public class QueryExample {
 
 	        // Generate algebra
 	        Op opQuery = Algebra.compile(query) ;
-	        QueryPlanner planner = new QueryPlanner(query, "L10K", "10");
+	        QueryPlanner planner = new QueryPlanner(query, t, "0");
 	        planner.executeQuery();
 	        
 		} catch (IOException e) {
