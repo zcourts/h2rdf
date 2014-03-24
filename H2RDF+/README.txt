@@ -12,3 +12,7 @@ Isntalling H2RDF+:
 bin/hadoop jar  H2RDF.jar gr.ntua.h2rdf.loadTriples.LoadTriples <triplesFile> <TableName>
 10. Query example:
 bin/hadoop jar H2RDF.jar gr.ntua.h2rdf.queryProcessing.QueryExample
+
+This version contains some harcoded values that we plan to put in a configuration file. 
+In class gr.ntua.h2rdf.indexScans.MapReduceMergeJoinExecutor1, line:163 there is a parameter named taskslots which is set to 5. This defines the number of reduce slots used for the sort-erge join
+In com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorMergeJoin change the mappers line283, 293 to your cluster's mappers.  
