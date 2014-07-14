@@ -180,7 +180,7 @@ public class QueryExampleOpenRDF {
         		"?res rdf:type arco:WebResource. " +
         		"} group by ?lang ";
         
-        String q=q9;
+        String q=q3;
 		QueryResult<BindingSet> rs=null;
 		try {
 			rs = store.execOpenRdf(q);

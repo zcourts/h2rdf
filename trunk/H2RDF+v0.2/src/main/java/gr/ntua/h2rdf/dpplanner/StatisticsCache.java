@@ -93,7 +93,7 @@ public class StatisticsCache {
 
 	public static void initialize(HTable table) {
 		String t = Bytes.toString(table.getTableName());
-
+		System.out.println("Get statistics for table "+Bytes.toString(table.getTableName())+" ...");
 		TreeMap<byte[], List<byte[]>> stats = new TreeMap<byte[], List<byte[]>>(Bytes.BYTES_RAWCOMPARATOR);
 		statistics.put(t, stats);
 		try {

@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -57,6 +58,7 @@ public class ResultSetOpenRDFBindings implements QueryResult<BindingSet> {
 				//Configuration c = HBaseConfiguration.create();
 				this.table= new HTable( conf, hconf.getTable()+"_Index" );
 				fs = FileSystem.get(new URI(conf.get("fs.default.name")), conf, hconf.getUser());
+				
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
