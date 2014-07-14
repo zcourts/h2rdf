@@ -17,22 +17,16 @@ package gr.ntua.h2rdf.queryProcessing;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.sparql.algebra.Algebra;
 import com.hp.hpl.jena.sparql.algebra.Op;
 import com.hp.hpl.jena.sparql.algebra.OpWalker;
-import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitor;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorMergeJoin;
-import com.hp.hpl.jena.sparql.core.Var;
 
 public class QueryPlanner {
 	public static HashMap<String, HTable> tables = new HashMap<String, HTable>();

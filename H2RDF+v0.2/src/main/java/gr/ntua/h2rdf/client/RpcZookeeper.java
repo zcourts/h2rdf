@@ -15,10 +15,6 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.client;
 
-import org.apache.hadoop.hbase.util.Bytes;
-
-import gr.ntua.h2rdf.client.H2RDFConf;
-import gr.ntua.h2rdf.client.JavaApiCall;
 
 public class RpcZookeeper {
     private JavaApiCall call;

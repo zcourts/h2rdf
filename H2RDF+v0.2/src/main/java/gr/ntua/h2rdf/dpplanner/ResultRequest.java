@@ -18,7 +18,6 @@ package gr.ntua.h2rdf.dpplanner;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.StringTokenizer;

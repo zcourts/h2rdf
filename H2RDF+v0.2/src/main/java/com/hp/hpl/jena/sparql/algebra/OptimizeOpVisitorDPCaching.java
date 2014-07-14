@@ -16,35 +16,24 @@
 package com.hp.hpl.jena.sparql.algebra;
 
 import gr.ntua.h2rdf.dpplanner.CacheController;
-import gr.ntua.h2rdf.dpplanner.CachedResult;
-import gr.ntua.h2rdf.dpplanner.CachedResults;
 import gr.ntua.h2rdf.dpplanner.CachingExecutor;
 import gr.ntua.h2rdf.dpplanner.DPJoinPlan;
 import gr.ntua.h2rdf.dpplanner.DPSolver;
-import gr.ntua.h2rdf.dpplanner.IndexScan;
-import gr.ntua.h2rdf.dpplanner.PowerSet;
 import gr.ntua.h2rdf.indexScans.BGP;
-import gr.ntua.h2rdf.indexScans.JoinExecutor;
-import gr.ntua.h2rdf.indexScans.MergeJoinPlan;
 import gr.ntua.h2rdf.indexScans.PartitionFinder;
 import gr.ntua.h2rdf.indexScans.ResultBGP;
 import gr.ntua.h2rdf.loadTriples.ByteTriple;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.jruby.RubyProcess.Sys;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.Query;
@@ -52,7 +41,6 @@ import com.hp.hpl.jena.query.SortCondition;
 import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
 import com.hp.hpl.jena.sparql.algebra.op.OpOrder;
 import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.function.library.max;
 import com.hp.hpl.jena.sparql.syntax.PatternVars;
 
 public class OptimizeOpVisitorDPCaching extends OpVisitorBase {

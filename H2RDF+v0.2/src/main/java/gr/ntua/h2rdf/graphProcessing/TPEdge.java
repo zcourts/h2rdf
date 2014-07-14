@@ -15,8 +15,6 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.graphProcessing;
 
-import javaewah.EWAHCompressedBitmap;
-
 import org.jgrapht.graph.DefaultEdge;
 
 public class TPEdge extends DefaultEdge implements Comparable<TPEdge>{

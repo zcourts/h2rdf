@@ -15,11 +15,8 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.dpplanner;
 
-import gr.ntua.h2rdf.client.H2RDFConf;
 import gr.ntua.h2rdf.concurrent.QueueDP;
 import gr.ntua.h2rdf.concurrent.SyncPrimitive;
-import gr.ntua.h2rdf.dpplanner.CachedResults;
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -27,26 +24,14 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
-import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.hp.hpl.jena.query.Query;

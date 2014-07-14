@@ -15,24 +15,20 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.Reducer;
 
 public class OrderingReducer extends Reducer<ImmutableBytesWritable, Bindings, ImmutableBytesWritable, KeyValue> {
 

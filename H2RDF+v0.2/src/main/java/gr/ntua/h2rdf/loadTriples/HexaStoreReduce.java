@@ -15,19 +15,13 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.loadTriples;
 
-import gr.ntua.h2rdf.bytes.ByteValues;
-
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Reducer.Context;
 
 public class HexaStoreReduce extends Reducer<ImmutableBytesWritable, NullWritable, ImmutableBytesWritable, KeyValue> {
 	private byte[] prev2firstByte, prevfirstByte;

@@ -16,14 +16,8 @@
 package gr.ntua.h2rdf.indexScans;
 import gr.ntua.h2rdf.dpplanner.CachedResult;
 import gr.ntua.h2rdf.dpplanner.CachingExecutor;
-import gr.ntua.h2rdf.inputFormat2.MultiTableInputFormat;
-import gr.ntua.h2rdf.inputFormat2.TableMapReduceUtil;
 import gr.ntua.h2rdf.inputFormat2.TableRecordGroupReader;
-import gr.ntua.h2rdf.inputFormat2.TableRecordReader2;
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,21 +36,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
-import org.apache.hadoop.hbase.util.Base64;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.SequenceFileAsBinaryInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileAsBinaryOutputFormat;
 
-import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitor;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-//import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorMergeJoin;
 import com.hp.hpl.jena.sparql.core.Var;
 
 public class CentralizedMergeJoinExecutor {

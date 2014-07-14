@@ -19,7 +19,6 @@ import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 

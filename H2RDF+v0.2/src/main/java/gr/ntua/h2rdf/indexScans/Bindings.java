@@ -15,6 +15,8 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
+import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -22,7 +24,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,8 +39,6 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.Mapper.Context;
-
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 public class Bindings extends BytesWritable {
 	public Map<Byte, Set<Long> > map;

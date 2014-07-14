@@ -17,15 +17,11 @@ package gr.ntua.h2rdf.examples;
 
 import gr.ntua.h2rdf.client.H2RDFConf;
 import gr.ntua.h2rdf.client.H2RDFFactory;
-import gr.ntua.h2rdf.client.H2RDFQueryResult;
-import gr.ntua.h2rdf.client.ResultSet;
 import gr.ntua.h2rdf.client.Store;
+
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryResult;
-
-import java.util.Iterator;
-import java.util.List;
 
 public class QueryExampleOpenRDF {
 

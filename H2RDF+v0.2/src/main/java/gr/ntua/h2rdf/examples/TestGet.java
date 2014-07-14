@@ -15,12 +15,11 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.examples;
 
+import gr.ntua.h2rdf.client.H2RDFConf;
+import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
+
 import java.io.IOException;
 import java.util.Random;
-
-import gr.ntua.h2rdf.client.H2RDFConf;
-import gr.ntua.h2rdf.loadTriples.ByteTriple;
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;

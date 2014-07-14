@@ -16,7 +16,6 @@
 package gr.ntua.h2rdf.indexScans;
 
 import gr.ntua.h2rdf.dpplanner.CachedResult;
-import gr.ntua.h2rdf.dpplanner.CachedResults;
 import gr.ntua.h2rdf.dpplanner.DPJoinPlan;
 
 import java.util.ArrayList;

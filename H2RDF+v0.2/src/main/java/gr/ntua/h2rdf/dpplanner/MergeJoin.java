@@ -15,7 +15,6 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.dpplanner;
 
-import gr.ntua.h2rdf.indexScans.BGP;
 import gr.ntua.h2rdf.indexScans.JoinExecutor;
 import gr.ntua.h2rdf.indexScans.MergeJoinPlan;
 import gr.ntua.h2rdf.indexScans.ResultBGP;
@@ -23,14 +22,10 @@ import gr.ntua.h2rdf.indexScans.ResultBGP;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import com.hp.hpl.jena.sparql.core.Var;
 
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorMergeJoin;
+import com.hp.hpl.jena.sparql.core.Var;
 
 public class MergeJoin implements DPJoinPlan{
 

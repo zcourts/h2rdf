@@ -15,10 +15,10 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
-import java.io.IOException;
-
 import gr.ntua.h2rdf.loadTriples.ByteTriple;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
+
+import java.io.IOException;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;

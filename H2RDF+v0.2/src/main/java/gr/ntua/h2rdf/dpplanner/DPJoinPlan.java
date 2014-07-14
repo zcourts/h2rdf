@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-import com.hp.hpl.jena.sparql.core.Var;
 
 
 public interface DPJoinPlan extends Comparable<DPJoinPlan>{

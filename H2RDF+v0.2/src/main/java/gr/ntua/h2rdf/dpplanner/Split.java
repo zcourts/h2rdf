@@ -17,7 +17,6 @@ package gr.ntua.h2rdf.dpplanner;
 
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Iterator;
 import java.util.List;
 
 public class Split {

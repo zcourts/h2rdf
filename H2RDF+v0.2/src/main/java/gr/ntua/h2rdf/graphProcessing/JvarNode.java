@@ -18,8 +18,6 @@ package gr.ntua.h2rdf.graphProcessing;
 import java.util.ArrayList;
 import java.util.List;
 
-import javaewah.EWAHCompressedBitmap;
-
 public class JvarNode implements Comparable<JvarNode> {
 
 	private String var;

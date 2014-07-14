@@ -17,7 +17,6 @@ package gr.ntua.h2rdf.indexScans;
 
 import gr.ntua.h2rdf.bytes.H2RDFNode;
 import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
-import gr.ntua.h2rdf.dpplanner.CacheController;
 import gr.ntua.h2rdf.dpplanner.IDTranslator;
 import gr.ntua.h2rdf.dpplanner.StatisticsCache;
 import gr.ntua.h2rdf.loadTriples.ByteTriple;
@@ -30,17 +29,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedMap;
 
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitor;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
 import com.hp.hpl.jena.sparql.core.Var;
 

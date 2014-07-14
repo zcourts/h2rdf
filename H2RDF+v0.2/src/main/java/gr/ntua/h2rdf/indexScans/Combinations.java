@@ -19,12 +19,10 @@ import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.ArrayList;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.hadoop.hbase.util.Bytes;

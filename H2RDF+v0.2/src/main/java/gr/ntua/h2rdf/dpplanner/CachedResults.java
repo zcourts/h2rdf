@@ -19,13 +19,9 @@ import gr.ntua.h2rdf.indexScans.ResultBGP;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
 
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-import com.hp.hpl.jena.sparql.core.Var;
 
 public class CachedResults implements DPJoinPlan{
 	public List<CachedResult> results;

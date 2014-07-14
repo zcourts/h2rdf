@@ -15,20 +15,17 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
-import java.io.IOException;
-
 import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
 import gr.ntua.h2rdf.client.H2RDFConf;
+
+import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
 
-import com.hp.hpl.jena.datatypes.BaseDatatype;
-import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.core.VarAlloc;
 
 public class TestBGP {
 

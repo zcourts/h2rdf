@@ -15,21 +15,13 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.bytes;
 
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.MD5Hash;
 
-
-import com.hp.hpl.jena.datatypes.BaseDatatype;
-import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.rdf.model.AnonId;
 
 public class H2RDFNode {
 	byte[] hashValue, stringValue;

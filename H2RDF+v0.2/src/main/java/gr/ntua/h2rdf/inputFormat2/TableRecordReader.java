@@ -17,26 +17,20 @@ package gr.ntua.h2rdf.inputFormat2;
 
 import gr.ntua.h2rdf.indexScans.Bindings;
 import gr.ntua.h2rdf.loadTriples.ByteTriple;
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.NavigableSet;
 
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableRecordReaderImpl;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-
-
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.BytesWritable;
 /**
  * Iterate over an HBase table data, return (ImmutableBytesWritable, Result)
  * pairs.

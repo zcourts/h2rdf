@@ -16,7 +16,6 @@
 package gr.ntua.h2rdf.inputFormat2;
 
 import gr.ntua.h2rdf.indexScans.Bindings;
-import gr.ntua.h2rdf.loadTriples.ByteTriple;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.ByteArrayInputStream;
@@ -27,10 +26,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableSet;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.client.ClientScanner;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;

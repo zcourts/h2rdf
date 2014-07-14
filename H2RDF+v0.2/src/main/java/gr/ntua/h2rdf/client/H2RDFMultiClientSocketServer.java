@@ -15,10 +15,8 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.client;
 
-import gr.ntua.h2rdf.client.SimplifiedAPI;
-
-import java.net.*;
-import java.io.*;
+import java.io.IOException;
+import java.net.ServerSocket;
  
 public class H2RDFMultiClientSocketServer {
     public static void main(String[] args) throws IOException {

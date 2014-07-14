@@ -16,7 +16,6 @@
 package gr.ntua.h2rdf.indexScans;
 
 import gr.ntua.h2rdf.dpplanner.IndexScan;
-import gr.ntua.h2rdf.inputFormat2.FileTableInputFormat;
 import gr.ntua.h2rdf.inputFormat2.MultiTableInputFormat;
 import gr.ntua.h2rdf.inputFormat2.TableMapReduceUtil;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
@@ -32,10 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.HTable;
@@ -53,7 +50,6 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileAsBinaryInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileAsBinaryOutputFormat;
 
-import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitor;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorMergeJoin;
 import com.hp.hpl.jena.sparql.core.Var;
 

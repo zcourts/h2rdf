@@ -16,7 +16,6 @@
 package gr.ntua.h2rdf.indexScans;
 
 import gr.ntua.h2rdf.inputFormat2.TableRecordGroupReader;
-import gr.ntua.h2rdf.inputFormat2.TableRecordReader2;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.ByteArrayInputStream;
@@ -25,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,21 +34,13 @@ import java.util.Set;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Base64;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Reducer.Context;
-import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
-
-import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorMergeJoin;
 
 public class SortMergeJoinReducer extends Reducer<ImmutableBytesWritable, Bindings, Bindings, BytesWritable> {
 	public static double samplingRate = 0.05;
