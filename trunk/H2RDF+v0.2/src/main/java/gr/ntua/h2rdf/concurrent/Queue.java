@@ -15,6 +15,10 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.concurrent;
 
+import gr.ntua.h2rdf.queryProcessing.QueryPlanner;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -29,15 +33,10 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.Stat;
 
-import gr.ntua.h2rdf.queryProcessing.QueryPlanner;
-
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.sparql.algebra.*;
-
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import com.hp.hpl.jena.sparql.algebra.Algebra;
+import com.hp.hpl.jena.sparql.algebra.Op;
 
 public class Queue extends SyncPrimitive {
 

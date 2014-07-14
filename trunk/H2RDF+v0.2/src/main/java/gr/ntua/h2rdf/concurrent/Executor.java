@@ -23,10 +23,7 @@ package gr.ntua.h2rdf.concurrent;
  * with the specified arguments when the znode exists and kills
  * the program if the znode goes away.
  */
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Date;
 
 import org.apache.hadoop.hbase.util.Bytes;
@@ -34,8 +31,8 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooDefs.Ids;
+import org.apache.zookeeper.ZooKeeper;
 
 public class Executor
     implements Watcher

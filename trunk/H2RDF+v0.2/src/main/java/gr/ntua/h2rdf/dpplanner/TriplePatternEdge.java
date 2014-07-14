@@ -18,11 +18,7 @@ package gr.ntua.h2rdf.dpplanner;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-
-import gr.ntua.h2rdf.indexScans.BGP;
-import gr.ntua.h2rdf.loadTriples.ByteTriple;
 
 
 public class TriplePatternEdge implements Comparable<TriplePatternEdge>{

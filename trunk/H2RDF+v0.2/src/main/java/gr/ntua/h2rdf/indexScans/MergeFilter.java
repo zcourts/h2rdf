@@ -15,17 +15,15 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.*;
+import org.apache.hadoop.hbase.filter.Filter;
 
 public class MergeFilter implements Filter {
 	private List<Scan> scans;

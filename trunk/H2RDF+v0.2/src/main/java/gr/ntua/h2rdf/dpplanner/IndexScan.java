@@ -15,6 +15,11 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.dpplanner;
 
+import gr.ntua.h2rdf.indexScans.BGP;
+import gr.ntua.h2rdf.indexScans.Bindings;
+import gr.ntua.h2rdf.indexScans.ResultBGP;
+import gr.ntua.h2rdf.inputFormat2.TableRecordGroupReader;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,13 +35,6 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
-
-import gr.ntua.h2rdf.indexScans.BGP;
-import gr.ntua.h2rdf.indexScans.Bindings;
-import gr.ntua.h2rdf.indexScans.CentralizedMergeJoinExecutor;
-import gr.ntua.h2rdf.indexScans.MapReduceMergeJoinExecutor1;
-import gr.ntua.h2rdf.indexScans.ResultBGP;
-import gr.ntua.h2rdf.inputFormat2.TableRecordGroupReader;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;

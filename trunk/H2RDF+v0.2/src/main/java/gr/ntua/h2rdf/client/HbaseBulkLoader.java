@@ -15,15 +15,17 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.client;
 
+import gr.ntua.h2rdf.bytes.ByteValues;
+import gr.ntua.h2rdf.bytes.H2RDFNode;
+import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableExistsException;
@@ -31,11 +33,6 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.MD5Hash;
-
-import gr.ntua.h2rdf.bytes.ByteValues;
-import gr.ntua.h2rdf.bytes.H2RDFNode;
-import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
 
 import com.hp.hpl.jena.graph.Triple;
 

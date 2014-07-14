@@ -29,7 +29,6 @@ import com.hp.hpl.jena.sparql.algebra.Algebra;
 import com.hp.hpl.jena.sparql.algebra.Op;
 import com.hp.hpl.jena.sparql.algebra.OpWalker;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorMergeJoin;
 
 public class CachingExecutor {
 

@@ -24,9 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
 import com.hp.hpl.jena.sparql.core.Var;

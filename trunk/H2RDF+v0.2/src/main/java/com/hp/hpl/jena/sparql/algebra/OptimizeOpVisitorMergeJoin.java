@@ -16,8 +16,15 @@
 package com.hp.hpl.jena.sparql.algebra;
 
 
+import gr.ntua.h2rdf.dpplanner.IndexScan;
+import gr.ntua.h2rdf.indexScans.BGP;
+import gr.ntua.h2rdf.indexScans.JoinExecutor;
+import gr.ntua.h2rdf.indexScans.MergeJoinPlan;
+import gr.ntua.h2rdf.indexScans.PartitionFinder;
+import gr.ntua.h2rdf.indexScans.ResultBGP;
+
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,29 +32,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
-import java.io.IOException;
-
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.HTable;
-
-import org.apache.hadoop.conf.Configuration;
-
-import gr.ntua.h2rdf.dpplanner.IndexScan;
-import gr.ntua.h2rdf.indexScans.BGP;
-import gr.ntua.h2rdf.indexScans.JoinExecutor;
-import gr.ntua.h2rdf.indexScans.JoinPlan;
-import gr.ntua.h2rdf.indexScans.MergeJoinPlan;
-import gr.ntua.h2rdf.indexScans.PartitionFinder;
-import gr.ntua.h2rdf.indexScans.ResultBGP;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.sparql.algebra.op.*;
+import com.hp.hpl.jena.sparql.algebra.op.OpBGP;
+import com.hp.hpl.jena.sparql.algebra.op.OpDatasetNames;
+import com.hp.hpl.jena.sparql.algebra.op.OpDistinct;
+import com.hp.hpl.jena.sparql.algebra.op.OpExt;
+import com.hp.hpl.jena.sparql.algebra.op.OpFilter;
+import com.hp.hpl.jena.sparql.algebra.op.OpGraph;
+import com.hp.hpl.jena.sparql.algebra.op.OpJoin;
+import com.hp.hpl.jena.sparql.algebra.op.OpLeftJoin;
+import com.hp.hpl.jena.sparql.algebra.op.OpOrder;
+import com.hp.hpl.jena.sparql.algebra.op.OpProject;
+import com.hp.hpl.jena.sparql.algebra.op.OpQuadPattern;
+import com.hp.hpl.jena.sparql.algebra.op.OpSlice;
+import com.hp.hpl.jena.sparql.algebra.op.OpTable;
+import com.hp.hpl.jena.sparql.algebra.op.OpUnion;
 import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.expr.Expr;
-import com.hp.hpl.jena.sparql.pfunction.library.concat;
 import com.hp.hpl.jena.sparql.syntax.PatternVars;
 
 

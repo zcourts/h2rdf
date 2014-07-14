@@ -16,14 +16,8 @@
 package gr.ntua.h2rdf.loadTriples;
 
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.semanticweb.yars.nx.Node;
 
 public class ByteTriple {
 	private long s,p,o;

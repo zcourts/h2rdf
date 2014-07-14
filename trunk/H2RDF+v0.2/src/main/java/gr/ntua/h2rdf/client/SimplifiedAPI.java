@@ -15,16 +15,11 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.client;
 
+import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import gr.ntua.h2rdf.client.BulkLoader;
-import gr.ntua.h2rdf.client.H2RDFConf;
-import gr.ntua.h2rdf.client.H2RDFFactory;
-import gr.ntua.h2rdf.client.Store;
-
-import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;

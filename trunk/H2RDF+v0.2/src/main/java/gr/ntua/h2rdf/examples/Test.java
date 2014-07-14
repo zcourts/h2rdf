@@ -15,26 +15,15 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.examples;
 
-import gr.ntua.h2rdf.bytes.ByteValues;
 import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
-import gr.ntua.h2rdf.client.ExecutorOpenRdf;
 import gr.ntua.h2rdf.client.H2RDFConf;
 import gr.ntua.h2rdf.loadTriples.ByteTriple;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Get;
@@ -42,14 +31,6 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.openjena.atlas.lib.Sink;
-import org.openjena.riot.RiotReader;
-import org.openjena.riot.lang.LangNTriples;
-import org.semanticweb.yars.nx.Node;
-
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 public class Test {
 

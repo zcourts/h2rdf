@@ -15,18 +15,16 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.client;
 
+import gr.ntua.h2rdf.indexScans.Bindings;
+import gr.ntua.h2rdf.indexScans.Combinations;
+import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
-
-import gr.ntua.h2rdf.indexScans.Bindings;
-import gr.ntua.h2rdf.indexScans.Combinations;
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -34,7 +32,6 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.openrdf.model.Value;
 import org.openrdf.query.impl.MapBindingSet;
 
 public class BindingsResultIterable {

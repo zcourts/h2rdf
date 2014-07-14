@@ -15,9 +15,6 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.inputFormat2;
 
-import gr.ntua.h2rdf.indexScans.Bindings;
-import gr.ntua.h2rdf.indexScans.JoinBGPMapper;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,9 +23,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -38,9 +33,7 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileAsBinaryInputFormat;
-import org.apache.velocity.app.event.ReferenceInsertionEventHandler.referenceInsertExecutor;
 
 public class FileTableInputFormat extends InputFormat implements Configurable {
 	private static SequenceFileAsBinaryInputFormat fileInputFormat = new SequenceFileAsBinaryInputFormat();

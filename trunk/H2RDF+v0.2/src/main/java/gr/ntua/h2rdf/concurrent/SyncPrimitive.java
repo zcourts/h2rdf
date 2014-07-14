@@ -15,20 +15,15 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.concurrent;
 
+import gr.ntua.h2rdf.dpplanner.CacheController;
+
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
-import java.util.Random;
 
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.Watcher.Event;
-
-import gr.ntua.h2rdf.concurrent.Barrier;
-import gr.ntua.h2rdf.concurrent.Queue;
-import gr.ntua.h2rdf.dpplanner.CacheController;
 
 public class SyncPrimitive implements Watcher {
 	static public final String NL = System.getProperty("line.separator") ; 

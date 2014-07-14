@@ -15,25 +15,10 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
-import gr.ntua.h2rdf.client.H2RDFConf;
-import gr.ntua.h2rdf.loadTriples.ByteTriple;
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
 import com.hp.hpl.jena.sparql.core.Var;

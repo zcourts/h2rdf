@@ -16,16 +16,13 @@
 package gr.ntua.h2rdf.client;
 
 
-import java.io.IOException;
-import java.net.URI;
+import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
 
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryResult;
-
-import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
 
 import com.hp.hpl.jena.graph.Triple;
 

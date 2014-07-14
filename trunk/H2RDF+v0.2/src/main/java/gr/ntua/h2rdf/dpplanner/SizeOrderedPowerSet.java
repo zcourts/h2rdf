@@ -14,11 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package gr.ntua.h2rdf.dpplanner;
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class SizeOrderedPowerSet {
 	private int level;

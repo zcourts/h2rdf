@@ -15,13 +15,8 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
-import gr.ntua.h2rdf.dpplanner.CachingExecutor;
 import gr.ntua.h2rdf.inputFormat2.MultiTableInputFormat;
-import gr.ntua.h2rdf.inputFormat2.MultiTableInputFormatBase;
 import gr.ntua.h2rdf.inputFormat2.TableRecordGroupReader;
-import gr.ntua.h2rdf.inputFormat2.TableRecordReader;
-import gr.ntua.h2rdf.inputFormat2.TableRecordReader2;
-import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -35,32 +30,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeSet;
 
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Base64;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Mapper.Context;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.hadoop.util.ReflectionUtils;
 
 public class MergeJoinMapper extends Mapper<BytesWritable, BytesWritable, Bindings, BytesWritable> {
 	public static double samplingRate = 0.05;

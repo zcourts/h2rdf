@@ -15,12 +15,12 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
+import gr.ntua.h2rdf.loadTriples.ByteTriple;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
-import gr.ntua.h2rdf.loadTriples.ByteTriple;
 
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;

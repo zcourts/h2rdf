@@ -15,9 +15,7 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.dpplanner;
 
-import gr.ntua.h2rdf.indexScans.BGP;
 import gr.ntua.h2rdf.indexScans.Bindings;
-import gr.ntua.h2rdf.indexScans.JoinExecutor;
 import gr.ntua.h2rdf.indexScans.ResultBGP;
 import gr.ntua.h2rdf.inputFormat2.ResultRecordReader;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
@@ -41,13 +39,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.catalog.MetaReader.Visitor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
-import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.io.hfile.Compression.Algorithm;
+import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
@@ -56,8 +53,6 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ToolRunner;
 
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-import com.hp.hpl.jena.sparql.core.Var;
-import com.hp.hpl.jena.sparql.function.library.e;
 
 public class CachedResult implements DPJoinPlan{
 

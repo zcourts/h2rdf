@@ -15,6 +15,9 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.client;
 
+import gr.ntua.h2rdf.bytes.ByteValues;
+import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,9 +27,6 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.hp.hpl.jena.graph.Node;
-
-import gr.ntua.h2rdf.bytes.ByteValues;
-import gr.ntua.h2rdf.bytes.NotSupportedDatatypeException;
 
 
 public class H2RDFQueryResult {

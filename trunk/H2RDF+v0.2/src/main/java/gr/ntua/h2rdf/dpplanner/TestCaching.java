@@ -16,23 +16,13 @@
 package gr.ntua.h2rdf.dpplanner;
 
 import gr.ntua.h2rdf.client.H2RDFConf;
-import gr.ntua.h2rdf.queryProcessing.QueryPlanner;
 
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HRegionInfo;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.regionserver.HRegion;
 
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.sparql.algebra.Algebra;
-import com.hp.hpl.jena.sparql.algebra.Op;
 
 public class TestCaching {
     static public final String NL = System.getProperty("line.separator") ; 

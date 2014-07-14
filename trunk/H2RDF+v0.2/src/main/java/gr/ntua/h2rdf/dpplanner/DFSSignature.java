@@ -19,18 +19,13 @@ import gr.ntua.h2rdf.indexScans.BGP;
 import gr.ntua.h2rdf.loadTriples.ByteTriple;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.PriorityQueue;
+import java.util.TreeMap;
 
-import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching;
-import com.hp.hpl.jena.sparql.core.Var;
 
 public class DFSSignature {
 

@@ -15,8 +15,9 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.indexScans;
 
+import gr.ntua.h2rdf.inputFormat2.FileTableInputFormat;
+
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,13 +26,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
-
-import gr.ntua.h2rdf.client.H2RDFConf;
-import gr.ntua.h2rdf.inputFormat2.FileTableInputFormat;
-import gr.ntua.h2rdf.inputFormat2.MultiTableInputFormat;
-import gr.ntua.h2rdf.inputFormat2.TableMapReduceUtil;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -41,20 +37,11 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Base64;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileAsBinaryOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.openrdf.query.algebra.evaluation.function.string.Concat;
 
 import com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitor;
 import com.hp.hpl.jena.sparql.core.Var;

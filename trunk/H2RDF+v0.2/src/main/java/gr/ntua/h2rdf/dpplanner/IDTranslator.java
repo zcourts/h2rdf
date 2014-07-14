@@ -15,7 +15,6 @@
  ******************************************************************************/
 package gr.ntua.h2rdf.dpplanner;
 
-import gr.ntua.h2rdf.bytes.H2RDFNode;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
 import java.io.IOException;
