@@ -61,7 +61,7 @@ public class DPSolver {
 		for (int i = 0; i < n; i++) {
 			b.set(i);
 		}
-		System.out.println("Cache Checks: "+cacheChecks);
+		//System.out.println("Cache Checks: "+cacheChecks);
 		System.out.println("Join Checks: "+totalChecks);
 		//System.out.println("Optimal: "+ dptable.get(b));
 		
@@ -108,13 +108,13 @@ public class DPSolver {
 		
 		//check cache!!!!!
 		if(s1.cardinality()>=2){
-			System.out.println("Check cache s:"+s1);
+			//System.out.println("Check cache s:"+s1);
 			DPJoinPlan r = null;
 			DPJoinPlan val = dptable.get(s1);
 			Double c=1.0;
 			if(val!=null)
 				c=val.getCost();
-			CachedResults res =null;//CanonicalLabel.checkCache2(s1, visitor,cachingExecutor,c);
+			CachedResults res =null;
 			cacheChecks++;
 			if(res==null){
 				//res =CanonicalLabel.checkCacheNoSelective(s1, visitor,cachingExecutor);

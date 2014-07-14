@@ -152,7 +152,7 @@ public class ExecutorOpenRdf
 		        //System.out.println(varIds);
 		        //if(outfile.startsWith("output/")){
 			        //System.out.println("Real time in ms: "+ (stopTime-startTimeReal));
-        		System.out.println("New results!!");
+        		//System.out.println("New results!!");
         		rs = new ResultSetOpenRDFBindings(outfile, conf, varIds);
         	}
         	else{
