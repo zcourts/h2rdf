@@ -287,7 +287,14 @@ public class BGP extends ResultBGP {
 		}
 		else if(numVars==1){
 			byte[] stop = start.clone();
-			stop[stop.length-1]+=(byte)1;
+			if(stop[stop.length-1]!=(byte)255){
+				stop[stop.length-1]+=(byte)1;
+			}
+			else{
+				stop = new byte[start.length+1];
+				System.arraycopy(start, 0, stop, 0, start.length);
+				stop[stop.length-1]=(byte)1;
+			}
 			//ret = StatisticsCache.getStatistics(table,numVars,start);
 			SortedMap<byte[], List<byte[]>> m = StatisticsCache.getStatistics(table,start,stop);
 			double sum=0;
@@ -310,7 +317,14 @@ public class BGP extends ResultBGP {
 		}
 		else if(numVars == 2){
 			byte[] stop = start.clone();
-			stop[stop.length-1]+=(byte)1;
+			if(stop[stop.length-1]!=(byte)255){
+				stop[stop.length-1]+=(byte)1;
+			}
+			else{
+				stop = new byte[start.length+1];
+				System.arraycopy(start, 0, stop, 0, start.length);
+				stop[stop.length-1]=(byte)1;
+			}
 			SortedMap<byte[], List<byte[]>> m = StatisticsCache.getStatistics(table,start,stop);
 			double sum=0, sum1=0;
 			for(Entry<byte[], List<byte[]>> e : m.entrySet()){
