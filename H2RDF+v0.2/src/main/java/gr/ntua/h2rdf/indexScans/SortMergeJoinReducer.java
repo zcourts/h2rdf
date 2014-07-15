@@ -18,9 +18,11 @@ package gr.ntua.h2rdf.indexScans;
 import gr.ntua.h2rdf.inputFormat2.TableRecordGroupReader;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -311,7 +313,7 @@ public class SortMergeJoinReducer extends Reducer<ImmutableBytesWritable, Bindin
 			if(l.size()>0)
 				part+=l.get(l.size()-1)+"";
 			System.out.println("h2rdf.partition."+e.getKey().intValue()+" "+part);
-			out.writeBytes(e.getKey().intValue()+"$"+part+"\n");
+			out.writeUTF(e.getKey().intValue()+"_"+part);
 		}
 		out.flush();
 		out.close();

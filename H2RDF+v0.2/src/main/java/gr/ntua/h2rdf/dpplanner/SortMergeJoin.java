@@ -262,12 +262,14 @@ public class SortMergeJoin implements DPJoinPlan{
 				}
 				else{
 					plan.intermediate.add(res);
+					System.out.println("plan: "+res.print());
 					if(res.partitions!=null){
 						long[][] l = res.partitions.get(var);
 						if(l!=null){
 							for (int i = 1; i < l.length; i++) {
 								partition.add(l[i][0]);
 							}
+							System.out.println("Partition: "+partition);
 							mergePartSize++;
 						}
 					}

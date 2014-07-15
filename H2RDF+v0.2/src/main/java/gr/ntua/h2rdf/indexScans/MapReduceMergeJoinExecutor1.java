@@ -22,10 +22,12 @@ import gr.ntua.h2rdf.inputFormat2.TableMapReduceUtil;
 import gr.ntua.h2rdf.loadTriples.SortedBytesVLongWritable;
 import gr.ntua.h2rdf.loadTriples.TotalOrderPartitioner;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -422,11 +424,7 @@ public class MapReduceMergeJoinExecutor1 {
 	            	for (int j = 1; j < str1.length; j++) {
 	            		l.add(Long.parseLong(str1[j]));
 					}
-	            	//System.out.println("Var: "+var);
-	            	/*StringTokenizer tok = new StringTokenizer(str1[1]);
-	            	while(tok.hasMoreTokens()){
-	            		l.add(Long.parseLong(tok.nextToken("_")));
-	            	}*/
+	            	//System.out.println("Var: "+var+" "+l);
 	            	List<List<Long>> r = partialPartitions.get(var);
 	            	if(r==null){
 	            		r = new ArrayList<List<Long>>();
@@ -438,28 +436,6 @@ public class MapReduceMergeJoinExecutor1 {
 				// TODO: handle exception
 			}
 			in.close();
-			/*BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(st[i].getPath()), "UTF-8"));
-            String line;
-            line=br.readLine();
-            while (line != null){
-            	String[] str1 = line.split("_");
-            	int var = Integer.parseInt(str1[0]);
-            	List<Long> l = new ArrayList<Long>();
-            	for (int j = 1; j < str1.length; j++) {
-            		l.add(Long.parseLong(str1[j]));
-				}
-            	//System.out.println("Var: "+var);
-            	List<List<Long>> r = partialPartitions.get(var);
-            	if(r==null){
-            		r = new ArrayList<List<Long>>();
-            		partialPartitions.put(var, r);
-            	}
-            	r.add(l);
-                   
-                line=br.readLine();
-            }
-            
-            br.close();*/
 		}
 		HashMap<Integer, long[][]> resutlPartitions = new HashMap<Integer, long[][]>();
 		for( Entry<Integer, List<List<Long>>> e : partialPartitions.entrySet()){
