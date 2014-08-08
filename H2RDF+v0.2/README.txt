@@ -40,7 +40,8 @@ Query example:
 1. Start H2RDF server with:
 bin/hadoop jar ../H2RDF2.jar gr.ntua.h2rdf.concurrent.SyncPrimitive qTest master dp false
 2. Run gr.ntua.h2rdf.examples.QueryExampleOpenRDF. The first time the query will take a lot of time because the server will load the statistics of the table.
-3. Watch the server output to see the progress of the query.
+3. Watch the server's output to see the progress of the query.
+4. The translation of results from the native format of H2RDF+ to RDF is not optimized yet. Please do not take into account the translation time when conducting experiments. 
 
 This version contains some hardcoded values that we plan to put in a configuration file. 
 In com.hp.hpl.jena.sparql.algebra.OptimizeOpVisitorDPCaching change the workers line76 to your cluster's mappers.  
